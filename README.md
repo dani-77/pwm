@@ -1,5 +1,7 @@
 # pwm (Pipa Window Manager)
 
+![](pipa.jpg?raw=true)
+
 A Penrose X11 Tiling Window Manager.
 
 Named honouring my kitty Pipa; a lovely turtle female cat that has been with me for the past 14y and the brazilian name for paper kite;
