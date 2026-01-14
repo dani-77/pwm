@@ -2,6 +2,12 @@
 
 A Penrose X11 Tiling Window Manager.
 
+Named honouring my kitty Pipa; a lovely turtle female cat that has been with me for the past 14y and the brazilian name for paper kite;
+
+The P came from diverse places:
+
+My kitty, the Penrose library and the pipa (also known as paper kite). The WM you all know from where it came.
+
 ## Build Dependencies
 
 - cargo & rust
