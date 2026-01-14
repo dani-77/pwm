@@ -1,0 +1,7 @@
+[Desktop Entry]
+Version=1.0
+Name=pwm
+Comment=PipaWindowManager, a simple WM built with Penrose
+Exec=dbus-launch pwm
+Type=Application
+DesktopNames=pwm
