@@ -8,7 +8,7 @@ use penrose_ui::{
         Position, StatusBar,
         widgets::{
             ActiveWindowName, CurrentLayout, Widget, Workspaces,
-            sys::interval::{amixer_volume, battery_summary, current_date_and_time, wifi_network},
+            sys::interval::{current_date_and_time},
         },
     },
 };
@@ -53,9 +53,6 @@ fn widgets<X: XConn>() -> Vec<Box<dyn Widget<X>>> {
             true,
             false,
         )),
-        Box::new(wifi_network(pstyle, ms(10_000))),
-        Box::new(battery_summary("BAT0", pstyle, ms(60_000))),
-        Box::new(amixer_volume("Master", pstyle, ms(1000))),
         Box::new(current_date_and_time(pstyle, ms(10_000))),
     ]
 }

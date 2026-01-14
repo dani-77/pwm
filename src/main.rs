@@ -1,5 +1,5 @@
 mod bar;
-
+use penrose::Color;
 use penrose::x11rb::RustConn;
 use penrose::{
     Result, manage_hooks, 
@@ -62,8 +62,8 @@ fn raw_key_bindings(
         "M-Down" => send_layout_message(|| IncMain(-1)),
         "M-Right" => send_layout_message(|| ExpandMain),
         "M-Left" => send_layout_message(|| ShrinkMain),
-        "M-d" => spawn_action("dmenu_run"),
-        "M-t" => spawn_action("slock"),
+	"M-d" => spawn_action("dmenu_run"), 
+	"M-t" => spawn_action("slock"),
         "M-S-s" => log_current_state(),
         "M-Return" => spawn_action("st"),
         "M-S-f" => toggle_fullscreen(),
@@ -113,6 +113,10 @@ pub fn logout_menu() -> KeyHandler {
             show_line_numbers: false,
             show_on_bottom: false,
             password_input: false,
+            custom_prompt: Some("Power Menu".to_string()),
+            bg_color: Color::new_from_hex(0x282828),      // BLACK
+            fg_color: Color::new_from_hex(0xebdbb2),      // WHITE
+            selected_color: Color::new_from_hex(0xAA96DA), // LAVENDER
             ..DMenuConfig::default()
         };
 
