@@ -209,6 +209,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "pwm"
+version = "0.1.0"
+dependencies = [
+ "penrose",
+ "penrose_ui",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "quote"
 version = "1.0.42"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -457,15 +466,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ae137229bcbd6cdf0f7b80a31df61766145077ddf49416a728b02cb3921ff3fc"
 dependencies = [
  "windows-link",
-]
-
-[[package]]
-name = "wmd77"
-version = "0.3.1"
-dependencies = [
- "penrose",
- "penrose_ui",
- "tracing-subscriber",
 ]
 
 [[package]]
