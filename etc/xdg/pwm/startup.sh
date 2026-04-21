@@ -1,7 +1,7 @@
 #!/bin/bash
 
 conky -c ~/.conkyrc &
-feh --bg-fill --randomize /etc/xdg/wallpaper/ &
+feh --bg-fill --randomize /etc/xdg/pwm/wallpaper/ &
 synclient TapButton1=1 &
 dunst &
 udiskie -a &
