@@ -26,7 +26,7 @@ The WM you all know from where it came.
 
 - st
 
-- wireles_tools
+- wireless_tools
 
 ### Optional dependencies
 
