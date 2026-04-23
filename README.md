@@ -4,7 +4,7 @@
 
 A minimaist yet complete Penrose X11 Tiling Window Manager that is light and fun to use.
 
-Named honouring my kitty Pipa; a lovely turtle female cat that has been with me for the past 14y and the brazilian name for paper kite;
+Named in honor of my cat Pipa; an adorable tortoiseshell cat who was with me for almost 15 years and whose name is also the Brazilian word for paper kite;
 
 The P came from diverse places, but the Penrose library couldn't be forgotten. 
 
@@ -24,7 +24,9 @@ The WM you all know from where it came.
 
 - dmenu
 
-- st 
+- st
+
+- wireles_tools
 
 ### Optional dependencies
 
