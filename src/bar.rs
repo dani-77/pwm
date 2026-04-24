@@ -53,7 +53,7 @@ fn widgets<X: XConn>() -> Vec<Box<dyn Widget<X>>> {
             true,
             false,
         )),
-        Box::new(battery_summary("BAT0", pstyle, ms(60_000))),
+        Box::new(battery_summary("BAT1", pstyle, ms(60_000))),
         Box::new(amixer_volume("Master", pstyle, ms(1000))),
         Box::new(wifi_network(pstyle, ms(10_000))),
         Box::new(current_date_and_time(pstyle, ms(10_000))),
