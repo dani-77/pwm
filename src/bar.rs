@@ -8,7 +8,10 @@ use penrose_ui::{
         Position, StatusBar,
         widgets::{
             ActiveWindowName, CurrentLayout, Widget, Workspaces,
-            sys::interval::{battery_summary, wifi_network, amixer_volume, current_date_and_time},
+            sys::{
+                helpers::battery_file_search,
+                interval::{battery_summary, wifi_network, amixer_volume, current_date_and_time},
+            },
         },
     },
 };
@@ -40,6 +43,10 @@ fn widgets<X: XConn>() -> Vec<Box<dyn Widget<X>>> {
 
     let ms = |n: u64| Duration::from_millis(n);
 
+    let bat: &'static str = battery_file_search()
+        .map(|s| Box::leak(s.into_boxed_str()) as &'static str)
+        .unwrap_or("BAT0");
+
     vec![
         Box::new(Workspaces::new(style, highlight, empty_ws)),
         Box::new(CurrentLayout::new(style)),
@@ -53,7 +60,7 @@ fn widgets<X: XConn>() -> Vec<Box<dyn Widget<X>>> {
             true,
             false,
         )),
-        Box::new(battery_summary("BAT1", pstyle, ms(60_000))),
+        Box::new(battery_summary(bat, pstyle, ms(60_000))),
         Box::new(amixer_volume("Master", pstyle, ms(1000))),
         Box::new(wifi_network(pstyle, ms(10_000))),
         Box::new(current_date_and_time(pstyle, ms(10_000))),
