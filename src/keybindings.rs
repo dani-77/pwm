@@ -44,8 +44,8 @@ pub fn raw_key_bindings(
         "M-Tab" => modify_with(|cs| cs.toggle_tag()),
         
         // Navegação de ecrãs
-        "M-bracketright" => modify_with(|cs| cs.next_screen()),
-        "M-bracketleft" => modify_with(|cs| cs.previous_screen()),
+        "M-period" => modify_with(|cs| cs.next_screen()),
+        "M-comma" => modify_with(|cs| cs.previous_screen()),
         
         // Layouts
         "M-m" => modify_with(|cs| cs.next_layout()),
