@@ -10,7 +10,8 @@ use penrose_ui::{
             ActiveWindowName, CurrentLayout, Widget, Workspaces,
             sys::{
                 helpers::battery_file_search,
-                interval::{battery_summary, wifi_network, amixer_volume, current_date_and_time},
+                interval::{amixer_volume, current_date_and_time},
+                refresh::{battery_summary, wifi_network},
             },
         },
     },
@@ -60,9 +61,9 @@ fn widgets<X: XConn>() -> Vec<Box<dyn Widget<X>>> {
             true,
             false,
         )),
-        Box::new(battery_summary(bat, pstyle, ms(60_000))),
+        Box::new(battery_summary(bat, pstyle)),
         Box::new(amixer_volume("Master", pstyle, ms(1000))),
-        Box::new(wifi_network(pstyle, ms(10_000))),
+        Box::new(wifi_network(pstyle)),
         Box::new(current_date_and_time(pstyle, ms(10_000))),
     ]
 }
