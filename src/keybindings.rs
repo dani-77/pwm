@@ -67,6 +67,11 @@ pub fn raw_key_bindings(
         "M-x" => logout_menu(),
         "M-S-s" => log_current_state(),
         "M-S-q" => exit(),
+
+        // Volume (PulseAudio)
+        "XF86AudioRaiseVolume" => spawn_action("pactl set-sink-volume @DEFAULT_SINK@ +5%"),
+        "XF86AudioLowerVolume" => spawn_action("pactl set-sink-volume @DEFAULT_SINK@ -5%"),
+        "XF86AudioMute" => spawn_action("pactl set-sink-mute @DEFAULT_SINK@ toggle"),
     };
 
     // Adiciona bindings para workspaces
