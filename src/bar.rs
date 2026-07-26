@@ -7,16 +7,16 @@ use penrose_ui::{
     bar::{
         Position, StatusBar,
         widgets::{
-            ActiveWindowName, CurrentLayout, Widget, Workspaces,
+            ActiveWindowName, CurrentLayout, RefreshText, Widget, Workspaces,
             sys::{
                 helpers::battery_file_search,
                 interval::{amixer_volume, current_date_and_time},
-                refresh::{battery_summary, wifi_network},
+                refresh::wifi_network,
             },
         },
     },
 };
-use std::time::Duration;
+use std::{fs, time::Duration};
 
 const BLACK: u32 = 0x282828ff;
 const WHITE: u32 = 0xebdbb2ff;
@@ -26,6 +26,35 @@ const FONT: &str = "Iosevka";
 const BAR_HEIGHT_PX: u32 = 22;
 const BAR_POINT_SIZE: u8 = 12;
 const MAX_ACTIVE_WINDOW_CHARS: usize = 50;
+
+// penrose_ui's battery widget only reads charge_now/charge_full, which some
+// laptops (e.g. this one) don't expose, reporting energy_now/energy_full
+// instead. `capacity` is always present and already a 0-100 percentage,
+// regardless of which units the battery reports in.
+fn battery_icon(charge: u32, status: &str) -> &'static str {
+    if status == "Charging" {
+        ""
+    } else if charge >= 90 || status == "Full" {
+        ""
+    } else if charge >= 70 {
+        ""
+    } else if charge >= 50 {
+        ""
+    } else if charge >= 20 {
+        ""
+    } else {
+        ""
+    }
+}
+
+fn battery_percent(bat: &str) -> Option<String> {
+    let status = fs::read_to_string(format!("/sys/class/power_supply/{bat}/status")).ok()?;
+    let status = status.trim();
+    let capacity = fs::read_to_string(format!("/sys/class/power_supply/{bat}/capacity")).ok()?;
+    let charge: u32 = capacity.trim().parse().ok()?;
+
+    Some(format!("{} {charge}%", battery_icon(charge, status)))
+}
 
 fn widgets<X: XConn>() -> Vec<Box<dyn Widget<X>>> {
     let highlight: Color = LAVENDER.into();
@@ -61,7 +90,9 @@ fn widgets<X: XConn>() -> Vec<Box<dyn Widget<X>>> {
             true,
             false,
         )),
-        Box::new(battery_summary(bat, pstyle)),
+        Box::new(RefreshText::new(pstyle, move || {
+            battery_percent(bat).unwrap_or_default()
+        })),
         Box::new(amixer_volume("Master", pstyle, ms(1000))),
         Box::new(wifi_network(pstyle)),
         Box::new(current_date_and_time(pstyle, ms(10_000))),
