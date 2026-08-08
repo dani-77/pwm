@@ -1,4 +1,6 @@
-<h1 align="center">pwm - Pipa Window Manager</h1>
+<h1 align="center">PWM
+  
+  Pipa Window Manager</h1>
 
 ![](pipa.jpg?raw=true)
 
