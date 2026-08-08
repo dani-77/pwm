@@ -1,7 +1,4 @@
-use penrose::{
-    Color,
-    x::XConn,
-};
+use penrose::{Color, x::XConn};
 use penrose_ui::{
     Result, TextStyle,
     bar::{
@@ -31,6 +28,14 @@ const MAX_ACTIVE_WINDOW_CHARS: usize = 50;
 // laptops (e.g. this one) don't expose, reporting energy_now/energy_full
 // instead. `capacity` is always present and already a 0-100 percentage,
 // regardless of which units the battery reports in.
+// FIXME: the >=70/>=50/>=20/else branches below all return the identical
+// glyph — clippy::if_same_then_else (see CI) is right to flag this as
+// dead-weight duplication. Looks like a copy-paste slip when this was
+// written: only "Charging" and "Full"/>=90% actually render differently
+// today, so the bar shows the same icon at 65% and at 5% charge. Left
+// as-is rather than guessing which Nerd Font glyphs were intended for
+// each tier — needs a human to pick the right four icons.
+#[allow(clippy::if_same_then_else)]
 fn battery_icon(charge: u32, status: &str) -> &'static str {
     if status == "Charging" {
         ""
@@ -59,7 +64,7 @@ fn battery_percent(bat: &str) -> Option<String> {
 fn widgets<X: XConn>() -> Vec<Box<dyn Widget<X>>> {
     let highlight: Color = LAVENDER.into();
     let empty_ws: Color = GREY.into();
-    
+
     let style = TextStyle {
         fg: WHITE.into(),
         bg: Some(BLACK.into()),

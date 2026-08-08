@@ -1,8 +1,8 @@
-use penrose::core::layout::LayoutStack;
 use penrose::builtin::layout::{
-    MainAndStack, Monocle, Grid,
+    Grid, MainAndStack, Monocle,
     transformers::{Gaps, ReflectHorizontal, ReserveTop},
 };
+use penrose::core::layout::LayoutStack;
 use penrose::extensions::layout::{Fibonacci, Tatami};
 use penrose::stack;
 
@@ -19,26 +19,20 @@ pub fn create_layouts_with_config(config: &LayoutConfig) -> LayoutStack {
     stack!(
         // MainAndStack lado esquerdo (padrão)
         MainAndStack::side(config.max_main, config.ratio, config.ratio_step),
-        
         // MainAndStack lado direito (refletido)
         ReflectHorizontal::wrap(MainAndStack::side(
             config.max_main,
             config.ratio,
             config.ratio_step
         )),
-        
         // MainAndStack em baixo
         MainAndStack::bottom(config.max_main, config.ratio, config.ratio_step),
-        
         // Monocle (fullscreen para janela focada)
         Monocle::boxed(),
-        
         // Grid (todas as janelas em grelha)
         Grid::boxed(),
-        
         // Fibonacci spiral
         Fibonacci::boxed_default(),
-        
         // Tatami (estilo japonês)
         Tatami::boxed_default()
     )
