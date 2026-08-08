@@ -1,32 +1,27 @@
+use penrose::extensions::util::dmenu::{DMenu, DMenuConfig, MenuMatch};
 use penrose::x11rb::RustConn;
 use penrose::{
+    Color,
     builtin::actions::{
-        exit, modify_with, send_layout_message, spawn as spawn_action,
+        exit,
         floating::{MouseDragHandler, MouseResizeHandler, sink_focused},
-        log_current_state,
-	key_handler,
+        key_handler, log_current_state, modify_with, send_layout_message, spawn as spawn_action,
     },
     builtin::layout::messages::{ExpandMain, IncMain, ShrinkMain},
-    core::bindings::{
-        KeyEventHandler, MouseEventHandler, MouseState, click_handler,
-    },
+    core::bindings::{KeyEventHandler, MouseEventHandler, MouseState, click_handler},
     extensions::actions::toggle_fullscreen,
     extensions::hooks::ToggleNamedScratchPad,
-    Color,
-    util::spawn as spawn_cmd,
     map,
+    util::spawn as spawn_cmd,
 };
-use penrose::extensions::util::dmenu::{DMenu, DMenuConfig, MenuMatch};
 use std::collections::HashMap;
 
-use crate::config::{WORKSPACES, BLACK, WHITE, LAVENDER};
+use crate::config::{BLACK, LAVENDER, WHITE, WORKSPACES};
 
 type KeyHandler = Box<dyn KeyEventHandler<RustConn>>;
 
 /// Cria os keybindings principais
-pub fn raw_key_bindings(
-    toggle_scratchpad: ToggleNamedScratchPad,
-) -> HashMap<String, KeyHandler> {
+pub fn raw_key_bindings(toggle_scratchpad: ToggleNamedScratchPad) -> HashMap<String, KeyHandler> {
     let mut raw_bindings = map! {
         map_keys: |k: &str| k.to_string();
 
@@ -35,18 +30,18 @@ pub fn raw_key_bindings(
         "M-k" => modify_with(|cs| cs.focus_up()),
         "M-S-j" => modify_with(|cs| cs.swap_down()),
         "M-S-k" => modify_with(|cs| cs.swap_up()),
-        
+
         // Gestão de janelas
         "M-q" => modify_with(|cs| cs.kill_focused()),
         "M-S-f" => toggle_fullscreen(),
-        
+
         // Navegação de workspaces/tags
         "M-Tab" => modify_with(|cs| cs.toggle_tag()),
-        
+
         // Navegação de ecrãs
         "M-period" => modify_with(|cs| cs.next_screen()),
         "M-comma" => modify_with(|cs| cs.previous_screen()),
-        
+
         // Layouts
         "M-m" => modify_with(|cs| cs.next_layout()),
         "M-S-m" => modify_with(|cs| cs.previous_layout()),
@@ -54,15 +49,15 @@ pub fn raw_key_bindings(
         "M-Down" => send_layout_message(|| IncMain(-1)),
         "M-Right" => send_layout_message(|| ExpandMain),
         "M-Left" => send_layout_message(|| ShrinkMain),
-        
+
         // Aplicações
         "M-Return" => spawn_action("st"),
         "M-d" => spawn_action("dmenu_run"),
         "M-t" => spawn_action("slock"),
-        
+
         // Scratchpad
         "M-s" => Box::new(toggle_scratchpad),
-        
+
         // Sistema
         "M-x" => logout_menu(),
         "M-S-s" => log_current_state(),
@@ -109,14 +104,8 @@ pub fn mouse_bindings() -> HashMap<MouseState, Box<dyn MouseEventHandler<RustCon
 
 /// Menu de logout com dmenu
 pub fn logout_menu() -> KeyHandler {
-
     key_handler(|state, _x| {
-        let choices = vec![
-            "󰒲  suspend",
-            "󰍃  logout",
-            "󱞳  reboot",
-            "󰤆  shutdown",
-        ];
+        let choices = vec!["󰒲  suspend", "󰍃  logout", "󱞳  reboot", "󰤆  shutdown"];
 
         let config = DMenuConfig {
             ignore_case: true,

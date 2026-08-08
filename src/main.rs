@@ -5,19 +5,19 @@ mod layouts;
 
 use penrose::x11rb::RustConn;
 use penrose::{
-    Result, manage_hooks,
+    Result,
     core::{Config, WindowManager, bindings::parse_keybindings_with_xmodmap},
     extensions::hooks::{
-        NamedScratchPad, add_named_scratchpads, add_ewmh_hooks,
-        manage::{SetWorkspace, FloatingCentered},
-        SpawnOnStartup,
+        NamedScratchPad, SpawnOnStartup, add_ewmh_hooks, add_named_scratchpads,
+        manage::{FloatingCentered, SetWorkspace},
     },
+    manage_hooks,
     x::query::ClassName,
 };
 use tracing_subscriber::{self, prelude::*};
 
 use config::PwmConfig;
-use keybindings::{raw_key_bindings, mouse_bindings};
+use keybindings::{mouse_bindings, raw_key_bindings};
 use layouts::layouts;
 
 fn main() -> Result<()> {
@@ -67,13 +67,13 @@ fn main() -> Result<()> {
 
     // Inicializa conexão X11
     let conn = RustConn::new()?;
-    
+
     // Parse keybindings
     let key_bindings = parse_keybindings_with_xmodmap(raw_key_bindings(toggle_nsp))?;
 
     // Cria status bar
     let bar = bar::status_bar().expect("failed to create status bar");
-    
+
     // Cria window manager
     let wm = bar.add_to(WindowManager::new(
         config,
