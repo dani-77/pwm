@@ -18,10 +18,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # libfontconfig1-dev: penrose_ui's font handling (yeslogic-fontconfig-sys).
+      # libx11-dev + libxft-dev: penrose_ui pulls in the `x11` crate with its
+      # "xlib" and "xft" features, whose build.rs pkg-config-probes for
+      # `x11`/`xft` accordingly - without these two, the build fails on
+      # `pkg-config exited with status code 1` for `x11.pc`.
       - name: Install system dev headers
         run: |
           sudo apt-get update
-          sudo apt-get install -y pkg-config libfontconfig1-dev
+          sudo apt-get install -y pkg-config libfontconfig1-dev libx11-dev libxft-dev
 
       - name: Install stable toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -54,10 +59,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # libfontconfig1-dev: penrose_ui's font handling (yeslogic-fontconfig-sys).
+      # libx11-dev + libxft-dev: penrose_ui pulls in the `x11` crate with its
+      # "xlib" and "xft" features, whose build.rs pkg-config-probes for
+      # `x11`/`xft` accordingly - without these two, the build fails on
+      # `pkg-config exited with status code 1` for `x11.pc`.
       - name: Install system dev headers
         run: |
           sudo apt-get update
-          sudo apt-get install -y pkg-config libfontconfig1-dev
+          sudo apt-get install -y pkg-config libfontconfig1-dev libx11-dev libxft-dev
 
       - name: Install stable toolchain
         uses: dtolnay/rust-toolchain@stable
