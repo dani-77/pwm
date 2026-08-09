@@ -1,6 +1,9 @@
-<h1 align="center">PWM
-  
-  Pipa Window Manager</h1>
+<h1 align="center">
+  <img src="logo.png" alt="pwm logo" width="160"><br>
+  PWM
+
+  Pipa Window Manager
+</h1>
 
 ![](pipa.jpg?raw=true)
 
