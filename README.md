@@ -5,8 +5,6 @@
   Pipa Window Manager
 </h1>
 
-![](pipa.jpg?raw=true)
-
 A minimalistic, yet complete, Penrose X11 Tiling Window Manager that is light and fun to use.
 
 Named in honor of my cat Pipa; an adorable tortoiseshell cat who was with me for almost 15 years and whose name is also the Brazilian word for paper kite;
