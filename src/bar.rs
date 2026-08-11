@@ -175,15 +175,15 @@ fn widgets<X: XConn>() -> Vec<Box<dyn Widget<X>>> {
             true,
             false,
         )),
-        Box::new(RefreshText::new(pstyle, move || {
-            battery_percent(bat).unwrap_or_default()
-        })),
         Box::new(cpu_usage(pstyle, ms(2000))),
         Box::new(RefreshText::new(pstyle, || {
             ram_percent().unwrap_or_default()
         })),
         Box::new(amixer_volume("Master", pstyle, ms(1000))),
         Box::new(wifi_network(pstyle)),
+        Box::new(RefreshText::new(pstyle, move || {
+            battery_percent(bat).unwrap_or_default()
+        })),
         Box::new(current_date_and_time(pstyle, ms(10_000))),
     ]
 }
