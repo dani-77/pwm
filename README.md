@@ -31,6 +31,16 @@ The WM you all know from where it came.
 
 - wireless_tools
 
+- [JetBrainsMono Nerd Font](https://www.nerdfonts.com/) (e.g. Void's `nerd-fonts-otf` package)
+
+  The status bar (`src/bar.rs`) renders battery, CPU, RAM, volume and layout
+  indicators as icon glyphs from the Nerd Fonts private-use-area ranges (e.g.
+  `\u{f2db}` for the CPU chip icon). The bar is hardcoded to the
+  `JetBrainsMono Nerd Font` family; without it installed, those icons render
+  as blank space instead of a crash, since a missing glyph just draws
+  nothing. If you want a different font, change the `FONT` constant in
+  `src/bar.rs` to another Nerd Font family available on your system.
+
 ### Optional dependencies
 
 - dunst
