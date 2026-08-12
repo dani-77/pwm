@@ -21,16 +21,16 @@ use keybindings::{mouse_bindings, raw_key_bindings};
 use layouts::layouts;
 
 fn main() -> Result<()> {
-    // Inicializa logging
+    // Initialize logging
     tracing_subscriber::fmt()
         .with_env_filter("info")
         .finish()
         .init();
 
-    // Carrega configuração
+    // Load configuration
     let pwm_config = PwmConfig::new();
 
-    // Hooks de gestão de janelas
+    // Window management hooks
     let my_manage_hook = manage_hooks! {
         ClassName("gimp") => SetWorkspace("3"),
         ClassName("deadbeef") => SetWorkspace("5"),
@@ -43,7 +43,7 @@ fn main() -> Result<()> {
         ClassName("qutebrowser") => SetWorkspace("9"),
     };
 
-    // Configuração do Penrose
+    // Penrose configuration
     let config = add_ewmh_hooks(Config {
         focused_border: pwm_config.focused_border,
         normal_border: pwm_config.normal_border,
@@ -65,16 +65,16 @@ fn main() -> Result<()> {
         true,
     );
 
-    // Inicializa conexão X11
+    // Initialize X11 connection
     let conn = RustConn::new()?;
 
     // Parse keybindings
     let key_bindings = parse_keybindings_with_xmodmap(raw_key_bindings(toggle_nsp))?;
 
-    // Cria status bar
+    // Create status bar
     let bar = bar::status_bar().expect("failed to create status bar");
 
-    // Cria window manager
+    // Create window manager
     let wm = bar.add_to(WindowManager::new(
         config,
         key_bindings,
@@ -82,7 +82,7 @@ fn main() -> Result<()> {
         conn,
     )?);
 
-    // Adiciona scratchpads
+    // Add scratchpads
     let wm = add_named_scratchpads(wm, vec![nsp]);
 
     // Run!

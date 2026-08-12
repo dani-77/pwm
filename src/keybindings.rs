@@ -20,25 +20,25 @@ use crate::config::{BLACK, LAVENDER, WHITE, WORKSPACES};
 
 type KeyHandler = Box<dyn KeyEventHandler<RustConn>>;
 
-/// Cria os keybindings principais
+/// Creates the main keybindings
 pub fn raw_key_bindings(toggle_scratchpad: ToggleNamedScratchPad) -> HashMap<String, KeyHandler> {
     let mut raw_bindings = map! {
         map_keys: |k: &str| k.to_string();
 
-        // Navegação de janelas
+        // Window navigation
         "M-j" => modify_with(|cs| cs.focus_down()),
         "M-k" => modify_with(|cs| cs.focus_up()),
         "M-S-j" => modify_with(|cs| cs.swap_down()),
         "M-S-k" => modify_with(|cs| cs.swap_up()),
 
-        // Gestão de janelas
+        // Window management
         "M-q" => modify_with(|cs| cs.kill_focused()),
         "M-S-f" => toggle_fullscreen(),
 
-        // Navegação de workspaces/tags
+        // Workspace/tag navigation
         "M-Tab" => modify_with(|cs| cs.toggle_tag()),
 
-        // Navegação de ecrãs
+        // Screen navigation
         "M-period" => modify_with(|cs| cs.next_screen()),
         "M-comma" => modify_with(|cs| cs.previous_screen()),
 
@@ -50,7 +50,7 @@ pub fn raw_key_bindings(toggle_scratchpad: ToggleNamedScratchPad) -> HashMap<Str
         "M-Right" => send_layout_message(|| ExpandMain),
         "M-Left" => send_layout_message(|| ShrinkMain),
 
-        // Aplicações
+        // Applications
         "M-Return" => spawn_action("st"),
         "M-d" => spawn_action("dmenu_run"),
         "M-t" => spawn_action("slock"),
@@ -58,7 +58,7 @@ pub fn raw_key_bindings(toggle_scratchpad: ToggleNamedScratchPad) -> HashMap<Str
         // Scratchpad
         "M-s" => Box::new(toggle_scratchpad),
 
-        // Sistema
+        // System
         "M-x" => logout_menu(),
         "M-S-s" => log_current_state(),
         "M-S-q" => exit(),
@@ -69,7 +69,7 @@ pub fn raw_key_bindings(toggle_scratchpad: ToggleNamedScratchPad) -> HashMap<Str
         "XF86AudioMute" => spawn_action("pactl set-sink-mute @DEFAULT_SINK@ toggle"),
     };
 
-    // Adiciona bindings para workspaces
+    // Add bindings for workspaces
     for tag in WORKSPACES.iter() {
         raw_bindings.extend([
             (
@@ -86,7 +86,7 @@ pub fn raw_key_bindings(toggle_scratchpad: ToggleNamedScratchPad) -> HashMap<Str
     raw_bindings
 }
 
-/// Cria os bindings do rato
+/// Creates the mouse bindings
 pub fn mouse_bindings() -> HashMap<MouseState, Box<dyn MouseEventHandler<RustConn>>> {
     use penrose::core::bindings::{
         ModifierKey::{Meta, Shift},
@@ -102,7 +102,7 @@ pub fn mouse_bindings() -> HashMap<MouseState, Box<dyn MouseEventHandler<RustCon
     }
 }
 
-/// Menu de logout com dmenu
+/// Logout menu with dmenu
 pub fn logout_menu() -> KeyHandler {
     key_handler(|state, _x| {
         let choices = vec!["󰒲  suspend", "󰍃  logout", "󱞳  reboot", "󰤆  shutdown"];
