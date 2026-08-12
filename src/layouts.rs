@@ -8,32 +8,32 @@ use penrose::stack;
 
 use crate::config::LayoutConfig;
 
-/// Cria o stack de layouts disponíveis
+/// Creates the stack of available layouts
 pub fn layouts() -> LayoutStack {
     let config = LayoutConfig::default();
     create_layouts_with_config(&config)
 }
 
-/// Cria layouts com configuração personalizada
+/// Creates layouts with custom configuration
 pub fn create_layouts_with_config(config: &LayoutConfig) -> LayoutStack {
     stack!(
-        // MainAndStack lado esquerdo (padrão)
+        // MainAndStack left side (default)
         MainAndStack::side(config.max_main, config.ratio, config.ratio_step),
-        // MainAndStack lado direito (refletido)
+        // MainAndStack right side (reflected)
         ReflectHorizontal::wrap(MainAndStack::side(
             config.max_main,
             config.ratio,
             config.ratio_step
         )),
-        // MainAndStack em baixo
+        // MainAndStack at the bottom
         MainAndStack::bottom(config.max_main, config.ratio, config.ratio_step),
-        // Monocle (fullscreen para janela focada)
+        // Monocle (fullscreen for focused window)
         Monocle::boxed(),
-        // Grid (todas as janelas em grelha)
+        // Grid (all windows in a grid)
         Grid::boxed(),
         // Fibonacci spiral
         Fibonacci::boxed_default(),
-        // Tatami (estilo japonês)
+        // Tatami (Japanese style)
         Tatami::boxed_default()
     )
     .map(|layout| {
@@ -44,7 +44,7 @@ pub fn create_layouts_with_config(config: &LayoutConfig) -> LayoutStack {
     })
 }
 
-/// Layout stack minimalista (menos opções)
+/// Minimalist layout stack (fewer options)
 #[allow(dead_code)]
 pub fn minimal_layouts(config: &LayoutConfig) -> LayoutStack {
     stack!(
@@ -60,7 +60,7 @@ pub fn minimal_layouts(config: &LayoutConfig) -> LayoutStack {
     })
 }
 
-/// Layout stack sem gaps (máximo espaço)
+/// Layout stack without gaps (maximum space)
 #[allow(dead_code)]
 pub fn no_gaps_layouts(config: &LayoutConfig) -> LayoutStack {
     stack!(

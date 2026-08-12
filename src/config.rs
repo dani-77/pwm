@@ -1,12 +1,12 @@
 use penrose::Color;
 
-/// Cores do tema
+/// Theme colors
 pub const BLACK: u32 = 0x282828ff;
 pub const WHITE: u32 = 0xebdbb2ff;
 pub const GREY: u32 = 0x3c3836ff;
 pub const LAVENDER: u32 = 0xAA96DA;
 
-/// Configurações de layout
+/// Layout settings
 pub struct LayoutConfig {
     pub max_main: u32,
     pub ratio: f32,
@@ -29,10 +29,10 @@ impl Default for LayoutConfig {
     }
 }
 
-/// Configurações de workspaces
+/// Workspace settings
 pub const WORKSPACES: [&str; 9] = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 
-/// Configurações de aplicações
+/// Application settings
 #[allow(dead_code)]
 pub struct AppConfig {
     pub terminal: &'static str,
@@ -52,7 +52,7 @@ impl Default for AppConfig {
     }
 }
 
-/// Configurações de scratchpad
+/// Scratchpad settings
 pub struct ScratchPadConfig {
     pub name: &'static str,
     pub command: &'static str,
@@ -73,7 +73,7 @@ impl Default for ScratchPadConfig {
     }
 }
 
-/// Estrutura principal de configuração
+/// Main configuration structure
 #[allow(dead_code)]
 pub struct PwmConfig {
     pub focused_border: Color,
