@@ -16,12 +16,16 @@ use penrose::{
 };
 use std::collections::HashMap;
 
-use crate::config::{BLACK, LAVENDER, WHITE, WORKSPACES};
+use crate::config::WORKSPACES;
+use crate::user_config::Theme;
 
 type KeyHandler = Box<dyn KeyEventHandler<RustConn>>;
 
 /// Creates the main keybindings
-pub fn raw_key_bindings(toggle_scratchpad: ToggleNamedScratchPad) -> HashMap<String, KeyHandler> {
+pub fn raw_key_bindings(
+    toggle_scratchpad: ToggleNamedScratchPad,
+    theme: &Theme,
+) -> HashMap<String, KeyHandler> {
     let mut raw_bindings = map! {
         map_keys: |k: &str| k.to_string();
 
@@ -59,7 +63,7 @@ pub fn raw_key_bindings(toggle_scratchpad: ToggleNamedScratchPad) -> HashMap<Str
         "M-s" => Box::new(toggle_scratchpad),
 
         // System
-        "M-x" => logout_menu(),
+        "M-x" => logout_menu(theme),
         "M-S-s" => log_current_state(),
         "M-S-q" => exit(),
 
@@ -103,8 +107,10 @@ pub fn mouse_bindings() -> HashMap<MouseState, Box<dyn MouseEventHandler<RustCon
 }
 
 /// Logout menu with dmenu
-pub fn logout_menu() -> KeyHandler {
-    key_handler(|state, _x| {
+pub fn logout_menu(theme: &Theme) -> KeyHandler {
+    let (black, white, accent) = (theme.black, theme.white, theme.accent);
+
+    key_handler(move |state, _x| {
         let choices = vec!["󰒲  suspend", "󰍃  logout", "󱞳  reboot", "󰤆  shutdown"];
 
         let config = DMenuConfig {
@@ -113,9 +119,9 @@ pub fn logout_menu() -> KeyHandler {
             show_on_bottom: false,
             password_input: false,
             custom_prompt: Some("Power Menu".to_string()),
-            bg_color: Color::new_from_hex(BLACK),
-            fg_color: Color::new_from_hex(WHITE),
-            selected_color: Color::new_from_hex(LAVENDER),
+            bg_color: Color::new_from_hex(black),
+            fg_color: Color::new_from_hex(white),
+            selected_color: Color::new_from_hex(accent),
             ..DMenuConfig::default()
         };
 

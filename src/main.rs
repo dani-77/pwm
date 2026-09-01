@@ -2,6 +2,7 @@ mod bar;
 mod config;
 mod keybindings;
 mod layouts;
+mod user_config;
 
 use penrose::x11rb::RustConn;
 use penrose::{
@@ -28,7 +29,8 @@ fn main() -> Result<()> {
         .init();
 
     // Load configuration
-    let pwm_config = PwmConfig::new();
+    let theme = user_config::load_theme();
+    let pwm_config = PwmConfig::new(&theme);
 
     // Window management hooks
     let my_manage_hook = manage_hooks! {
@@ -69,10 +71,10 @@ fn main() -> Result<()> {
     let conn = RustConn::new()?;
 
     // Parse keybindings
-    let key_bindings = parse_keybindings_with_xmodmap(raw_key_bindings(toggle_nsp))?;
+    let key_bindings = parse_keybindings_with_xmodmap(raw_key_bindings(toggle_nsp, &theme))?;
 
     // Create status bar
-    let bar = bar::status_bar().expect("failed to create status bar");
+    let bar = bar::status_bar(&theme).expect("failed to create status bar");
 
     // Create window manager
     let wm = bar.add_to(WindowManager::new(

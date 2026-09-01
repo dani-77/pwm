@@ -1,11 +1,5 @@
+use crate::user_config::Theme;
 use penrose::Color;
-
-/// Theme colors and font
-pub const BLACK: u32 = 0x282828ff;
-pub const WHITE: u32 = 0xebdbb2ff;
-pub const GREY: u32 = 0x3c3836ff;
-pub const LAVENDER: u32 = 0xAA96DA;
-pub const FONT: &str = "JetBrainsMono Nerd Font";
 
 /// Layout settings
 pub struct LayoutConfig {
@@ -84,20 +78,14 @@ pub struct PwmConfig {
     pub scratchpad: ScratchPadConfig,
 }
 
-impl Default for PwmConfig {
-    fn default() -> Self {
+impl PwmConfig {
+    pub fn new(theme: &Theme) -> Self {
         Self {
-            focused_border: LAVENDER.into(),
-            normal_border: GREY.into(),
+            focused_border: theme.accent.into(),
+            normal_border: theme.grey.into(),
             layout: LayoutConfig::default(),
             apps: AppConfig::default(),
             scratchpad: ScratchPadConfig::default(),
         }
-    }
-}
-
-impl PwmConfig {
-    pub fn new() -> Self {
-        Self::default()
     }
 }

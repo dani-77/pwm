@@ -15,7 +15,7 @@ use penrose_ui::{
 };
 use std::{fs, sync::Mutex, time::Duration};
 
-use crate::config::{BLACK, FONT, GREY, LAVENDER, WHITE};
+use crate::user_config::Theme;
 
 const BAR_HEIGHT_PX: u32 = 22;
 const BAR_POINT_SIZE: u8 = 12;
@@ -138,13 +138,13 @@ fn ram_percent() -> Option<String> {
     Some(format!("\u{e266} {pct}%"))
 }
 
-fn widgets<X: XConn>() -> Vec<Box<dyn Widget<X>>> {
-    let highlight: Color = LAVENDER.into();
-    let empty_ws: Color = GREY.into();
+fn widgets<X: XConn>(theme: &Theme) -> Vec<Box<dyn Widget<X>>> {
+    let highlight: Color = theme.accent.into();
+    let empty_ws: Color = theme.grey.into();
 
     let style = TextStyle {
-        fg: WHITE.into(),
-        bg: Some(BLACK.into()),
+        fg: theme.white.into(),
+        bg: Some(theme.black.into()),
         padding: (2, 2),
     };
 
@@ -185,13 +185,13 @@ fn widgets<X: XConn>() -> Vec<Box<dyn Widget<X>>> {
     ]
 }
 
-pub fn status_bar<X: XConn>() -> Result<StatusBar<X>> {
+pub fn status_bar<X: XConn>(theme: &Theme) -> Result<StatusBar<X>> {
     StatusBar::try_new(
         Position::Top,
         BAR_HEIGHT_PX,
-        Color::new_from_hex(BLACK),
-        FONT,
+        Color::new_from_hex(theme.black),
+        &theme.font,
         BAR_POINT_SIZE,
-        widgets(),
+        widgets(theme),
     )
 }
