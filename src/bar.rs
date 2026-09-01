@@ -15,11 +15,8 @@ use penrose_ui::{
 };
 use std::{fs, sync::Mutex, time::Duration};
 
-const BLACK: u32 = 0x282828ff;
-const WHITE: u32 = 0xebdbb2ff;
-const GREY: u32 = 0x3c3836ff;
-const LAVENDER: u32 = 0xAA96DA;
-const FONT: &str = "JetBrainsMono Nerd Font";
+use crate::config::{BLACK, FONT, GREY, LAVENDER, WHITE};
+
 const BAR_HEIGHT_PX: u32 = 22;
 const BAR_POINT_SIZE: u8 = 12;
 const MAX_ACTIVE_WINDOW_CHARS: usize = 50;

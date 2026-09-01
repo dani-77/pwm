@@ -1,10 +1,11 @@
 use penrose::Color;
 
-/// Theme colors
+/// Theme colors and font
 pub const BLACK: u32 = 0x282828ff;
 pub const WHITE: u32 = 0xebdbb2ff;
 pub const GREY: u32 = 0x3c3836ff;
 pub const LAVENDER: u32 = 0xAA96DA;
+pub const FONT: &str = "JetBrainsMono Nerd Font";
 
 /// Layout settings
 pub struct LayoutConfig {
