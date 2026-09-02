@@ -1,6 +1,6 @@
 [package]
 name = "pwm"
-version = "0.6.1"
+version = "0.6.2"
 description = "Pipa Window Manager, a light Penrose Libraries WM."
 authors = ["Daniel Azevedo", "dani-77 <daniazevedo77@posteo.net>"]
 license = "MIT"

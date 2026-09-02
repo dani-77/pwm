@@ -105,11 +105,20 @@ What you can configure:
   `arc_dark`, `dracula`, `tokyo_night`) via `active = "..."`, or define your
   own colors and font under `[theme.<name>]`.
 - **`[apps]`** - which programs `terminal`/`launcher`/`locker` spawn, and
-  where `startup_script` lives.
+  where `startup_script` lives. `startup_script` is run with the active
+  theme's name as its first argument (e.g. `startup.sh gruvbox_dark`), so a
+  script can pick matching wallpaper art if it wants to - the shipped
+  `/etc/xdg/pwm/startup.sh` does exactly that. A script that ignores its
+  arguments keeps working unchanged.
 - **`[[window_rule]]`** - which window class opens on which tag. Rules are
   overlaid onto the built-in list by class: one for a class already covered
   replaces just its tag, a new class gets added, and anything you don't
   mention keeps its default rule.
+- **`[[float_rule]]`** - which window classes float, centered, instead of
+  tiling (handy for popups/dialogs like d77run or pavucontrol), with
+  `width_ratio`/`height_ratio` sizing the floating window relative to the
+  screen. Unlike `[[window_rule]]`, there's no built-in list - a window
+  only floats if you add a rule for its class.
 - **`[bar]`** - `widgets`, an ordered list picking which bar widgets show
   (from `workspaces`, `layout`, `window_name`, `cpu`, `ram`, `volume`,
   `wifi`, `battery`, `clock`).

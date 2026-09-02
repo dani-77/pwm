@@ -30,6 +30,9 @@
 # terminal = "st"
 # launcher = "dmenu_run"
 # locker = "slock"
+# startup_script runs with the active theme's name as its first argument
+# (e.g. "startup.sh gruvbox_dark") - the shipped script uses it to pick
+# matching wallpaper art. A script that ignores its arguments still works.
 # startup_script = "/etc/xdg/pwm/startup.sh"
 
 # ── Window rules ─────────────────────────────────────────────────────────
@@ -45,6 +48,19 @@
 # [[window_rule]]
 # class = "mpv"
 # workspace = "5"
+
+# ── Floating windows ─────────────────────────────────────────────────────
+# Make specific window classes float, centered, instead of tiling - handy
+# for popups/dialogs like d77run, pavucontrol, or a picture-in-picture
+# player. width_ratio/height_ratio (0.0-1.0) size the floating window
+# relative to the screen; either one defaults to 0.6 if left out, and an
+# out-of-range value is clamped into 0.0..=1.0. Unlike [[window_rule]],
+# there's no built-in list here - a window only floats if you add a rule
+# for its class.
+# [[float_rule]]
+# class = "Pavucontrol"
+# width_ratio = 0.5
+# height_ratio = 0.5
 
 # ── Status bar ───────────────────────────────────────────────────────────
 # Which widgets show in the bar, and in what order. Available names:

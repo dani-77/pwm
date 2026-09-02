@@ -15,6 +15,7 @@ use tracing::warn;
 /// drawing paths).
 #[derive(Debug, Clone)]
 pub struct Theme {
+    pub name: String,
     pub black: u32,
     pub white: u32,
     pub grey: u32,
@@ -95,6 +96,18 @@ fn default_bar_widgets() -> Vec<String> {
     .collect()
 }
 
+/// A single "windows of this class float, centered, instead of tiling"
+/// rule. Unlike [`WindowRule`], there's no built-in list of these - a
+/// window only floats if `config.toml` adds a rule for its class.
+#[derive(Debug, Clone)]
+pub struct FloatRule {
+    pub class: String,
+    pub width_ratio: f64,
+    pub height_ratio: f64,
+}
+
+const DEFAULT_FLOAT_RATIO: f64 = 0.6;
+
 /// A single keybinding: `key` is the same string format
 /// `parse_keybindings_with_xmodmap` already accepts (e.g. `"M-j"`), `action`
 /// names one of keybindings.rs's built-in actions, and `arg` carries that
@@ -113,10 +126,12 @@ pub struct UserConfig {
     pub theme: Theme,
     pub apps: Apps,
     pub window_rules: Vec<WindowRule>,
+    pub float_rules: Vec<FloatRule>,
     pub bar_widgets: Vec<String>,
     /// `None` means `config.toml` had no `[[bind]]` entries at all, so
     /// keybindings.rs should use its own hardcoded defaults unchanged.
-    /// `Some(specs)` replaces them entirely - see [`crate::keybindings`].
+    /// `Some(specs)` is overlaid onto them key by key - see
+    /// [`crate::keybindings::raw_key_bindings`].
     pub binds: Option<Vec<BindSpec>>,
 }
 
@@ -128,6 +143,7 @@ fn builtin_themes() -> HashMap<String, Theme> {
         (
             DEFAULT_THEME_NAME.to_string(),
             Theme {
+                name: DEFAULT_THEME_NAME.to_string(),
                 black: 0x282828ff,
                 white: 0xebdbb2ff,
                 grey: 0x3c3836ff,
@@ -138,6 +154,7 @@ fn builtin_themes() -> HashMap<String, Theme> {
         (
             "gruvbox_dark".to_string(),
             Theme {
+                name: "gruvbox_dark".to_string(),
                 black: 0x282828ff,
                 white: 0xebdbb2ff,
                 grey: 0x3c3836ff,
@@ -148,6 +165,7 @@ fn builtin_themes() -> HashMap<String, Theme> {
         (
             "arc_dark".to_string(),
             Theme {
+                name: "arc_dark".to_string(),
                 black: 0x2f343fff,
                 white: 0xd3dae3ff,
                 grey: 0x353945ff,
@@ -158,6 +176,7 @@ fn builtin_themes() -> HashMap<String, Theme> {
         (
             "dracula".to_string(),
             Theme {
+                name: "dracula".to_string(),
                 black: 0x282a36ff,
                 white: 0xf8f8f2ff,
                 grey: 0x44475aff,
@@ -168,6 +187,7 @@ fn builtin_themes() -> HashMap<String, Theme> {
         (
             "tokyo_night".to_string(),
             Theme {
+                name: "tokyo_night".to_string(),
                 black: 0x1a1b26ff,
                 white: 0xc0caf5ff,
                 grey: 0x414868ff,
@@ -186,6 +206,8 @@ struct RawConfig {
     apps: RawApps,
     #[serde(default, rename = "window_rule")]
     window_rules: Vec<RawWindowRule>,
+    #[serde(default, rename = "float_rule")]
+    float_rules: Vec<RawFloatRule>,
     #[serde(default)]
     bar: RawBar,
     #[serde(default, rename = "bind")]
@@ -203,6 +225,13 @@ struct RawBind {
 struct RawWindowRule {
     class: String,
     workspace: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct RawFloatRule {
+    class: String,
+    width_ratio: Option<f64>,
+    height_ratio: Option<f64>,
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -288,6 +317,7 @@ impl RawTheme {
         };
 
         Theme {
+            name: name.to_string(),
             black: field(&self.black, "black", fallback.black),
             white: field(&self.white, "white", fallback.white),
             grey: field(&self.grey, "grey", fallback.grey),
@@ -374,6 +404,26 @@ fn resolve_window_rules(raw: Vec<RawWindowRule>) -> Vec<WindowRule> {
     rules
 }
 
+/// Resolves float rules from `config.toml`'s `[[float_rule]]` entries.
+/// There's no built-in list to overlay onto (unlike [`resolve_window_rules`]):
+/// a class only shows up here if the user asked for it, and a rule missing
+/// `width_ratio`/`height_ratio` falls back to [`DEFAULT_FLOAT_RATIO`] for
+/// whichever one it left out. Values outside `0.0..=1.0` are clamped, since
+/// `FloatingCentered::new` panics on them and a mistyped ratio shouldn't be
+/// able to crash pwm on startup.
+fn resolve_float_rules(raw: Vec<RawFloatRule>) -> Vec<FloatRule> {
+    raw.into_iter()
+        .map(|r| {
+            let clamp = |ratio: Option<f64>| ratio.unwrap_or(DEFAULT_FLOAT_RATIO).clamp(0.0, 1.0);
+            FloatRule {
+                class: r.class,
+                width_ratio: clamp(r.width_ratio),
+                height_ratio: clamp(r.height_ratio),
+            }
+        })
+        .collect()
+}
+
 /// `None` if `config.toml` has no `[[bind]]` entries (use the built-in
 /// keymap unchanged); `Some` with a fully-replacing list otherwise.
 fn resolve_binds(raw: Vec<RawBind>) -> Option<Vec<BindSpec>> {
@@ -401,6 +451,7 @@ pub fn load() -> UserConfig {
         theme: resolve_theme(raw.theme),
         apps: raw.apps.resolve(),
         window_rules: resolve_window_rules(raw.window_rules),
+        float_rules: resolve_float_rules(raw.float_rules),
         bar_widgets: raw.bar.widgets.unwrap_or_else(default_bar_widgets),
         binds: resolve_binds(raw.binds),
     }

@@ -33,12 +33,14 @@ fn main() -> Result<()> {
     let apps = &user_config.apps;
     let pwm_config = PwmConfig::new(theme);
 
-    // Window management hooks: which window class opens on which tag.
-    // ClassName/SetWorkspace both need a &'static str; window_rules is
-    // loaded once at startup, so leaking it (same tradeoff as the app
-    // names in keybindings.rs) is fine for the life of the process.
+    // Window management hooks: which window class opens on which tag
+    // ([[window_rule]]), and which window class floats centered instead of
+    // tiling ([[float_rule]]). ClassName/SetWorkspace/FloatingCentered all
+    // need a &'static str; both rule lists are loaded once at startup, so
+    // leaking them (same tradeoff as the app names in keybindings.rs) is
+    // fine for the life of the process.
     let my_manage_hook: Box<dyn ManageHook<RustConn>> = {
-        let hooks: Vec<Box<dyn ManageHook<RustConn>>> = user_config
+        let mut hooks: Vec<Box<dyn ManageHook<RustConn>>> = user_config
             .window_rules
             .iter()
             .map(|rule| {
@@ -47,6 +49,14 @@ fn main() -> Result<()> {
                 ManageHook::boxed((ClassName(class), SetWorkspace(workspace)))
             })
             .collect();
+
+        hooks.extend(user_config.float_rules.iter().map(|rule| {
+            let class: &'static str = Box::leak(rule.class.clone().into_boxed_str());
+            ManageHook::boxed((
+                ClassName(class),
+                FloatingCentered::new(rule.width_ratio, rule.height_ratio),
+            ))
+        }));
 
         Box::new(hooks)
     };
@@ -57,7 +67,15 @@ fn main() -> Result<()> {
         normal_border: pwm_config.normal_border,
         default_layouts: layouts(),
         manage_hook: Some(my_manage_hook),
-        startup_hook: Some(SpawnOnStartup::boxed(apps.startup_script.clone())),
+        // `spawn` (used internally by SpawnOnStartup) doesn't go through a
+        // shell, just a whitespace split - so the active theme name is
+        // passed as a plain argument (`$1` in a shell script), not an env
+        // var. A startup_script that ignores its args (the common case)
+        // keeps working exactly as before.
+        startup_hook: Some(SpawnOnStartup::boxed(format!(
+            "{} {}",
+            apps.startup_script, theme.name
+        ))),
         ..Config::default()
     });
 
