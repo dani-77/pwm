@@ -6,8 +6,11 @@
 # built-in default, and a missing or invalid config.toml never stops pwm
 # from starting.
 #
-# This file is only read once, at startup - there is no hot reload yet, so
-# changes need a logout/login (or a fresh `startx`) to take effect.
+# This file is only read at startup, not watched for changes - but the
+# "restart" action (bound to M-S-r by default) re-execs pwm in place, which
+# re-reads it without a full logout/login: existing windows survive, though
+# the bar and borders do flash briefly while the fresh process starts back
+# up. See "restart" under Keybindings below.
 
 # ── Theme ────────────────────────────────────────────────────────────────
 # Built-in themes: d77 (default), gruvbox_dark, arc_dark, dracula,
@@ -89,6 +92,7 @@
 #   spawn            (arg: any shell command)
 #   toggle_scratchpad (can only be bound once)
 #   logout_menu, log_state, exit
+#   restart          (re-reads this file - see the note below)
 #
 # [[bind]]
 # key = "M-j"

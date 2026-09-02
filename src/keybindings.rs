@@ -15,6 +15,7 @@ use penrose::{
     util::spawn as spawn_cmd,
 };
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicBool, Ordering};
 use tracing::warn;
 
 use crate::config::WORKSPACES;
@@ -29,6 +30,28 @@ type KeyHandler = Box<dyn KeyEventHandler<RustConn>>;
 // class names/tags, and is fine for values that live for the process' life.
 fn leak(s: String) -> &'static str {
     Box::leak(s.into_boxed_str())
+}
+
+/// Set by [`restart`] right before it stops the window manager loop the
+/// same way `exit()` does; `main` checks it once `wm.run()` returns and
+/// re-execs the pwm binary instead of letting the process end, so
+/// `config.toml` (and everything derived from it - theme, keybindings,
+/// window/float rules, bar widgets) gets re-read from scratch. This is a
+/// "fake" hot reload rather than a true one: existing windows survive
+/// (`manage_existing_clients` re-adopts them into the new process, exactly
+/// as it already does for anything alive when pwm starts up normally), but
+/// the bar and borders do flash briefly while the fresh process spins back
+/// up. `pub(crate)` since only `main` needs to read it.
+pub(crate) static RESTART_REQUESTED: AtomicBool = AtomicBool::new(false);
+
+/// Stops the window manager - see [`RESTART_REQUESTED`] - so `main` can
+/// restart pwm in place instead of quitting for good.
+fn restart() -> KeyHandler {
+    let mut do_exit = exit::<RustConn>();
+    key_handler(move |state, x| {
+        RESTART_REQUESTED.store(true, Ordering::SeqCst);
+        do_exit.call(state, x)
+    })
 }
 
 /// The default keymap, always used as the base that `config.toml`'s
@@ -87,6 +110,7 @@ fn default_bindings(
         "M-x" => logout_menu(theme),
         "M-S-s" => log_current_state(),
         "M-S-q" => exit(),
+        "M-S-r" => restart(),
 
         // Volume (PulseAudio)
         "XF86AudioRaiseVolume" => spawn_action("pactl set-sink-volume @DEFAULT_SINK@ +5%"),
@@ -141,6 +165,7 @@ fn action_for(
         "logout_menu" => logout_menu(theme),
         "log_state" => log_current_state(),
         "exit" => exit(),
+        "restart" => restart(),
         _ => return None,
     })
 }

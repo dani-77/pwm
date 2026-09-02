@@ -4,6 +4,7 @@ mod keybindings;
 mod layouts;
 mod user_config;
 
+use nix::sys::signal::{SigHandler, Signal, signal};
 use penrose::x11rb::RustConn;
 use penrose::{
     Result,
@@ -14,10 +15,14 @@ use penrose::{
     },
     x::query::ClassName,
 };
+use tracing::warn;
 use tracing_subscriber::{self, prelude::*};
 
+use std::os::unix::process::CommandExt;
+use std::sync::atomic::Ordering;
+
 use config::PwmConfig;
-use keybindings::{mouse_bindings, raw_key_bindings};
+use keybindings::{RESTART_REQUESTED, mouse_bindings, raw_key_bindings};
 use layouts::layouts;
 
 fn main() -> Result<()> {
@@ -118,5 +123,36 @@ fn main() -> Result<()> {
     let wm = add_named_scratchpads(wm, vec![nsp]);
 
     // Run!
-    wm.run()
+    wm.run()?;
+
+    // "M-S-r" (action `restart`) stops the loop above like a normal exit,
+    // but also sets this flag first - see its doc comment in keybindings.rs.
+    // By now `wm` (and the X connection it owned) has already been dropped,
+    // so re-exec'ing straight into a fresh pwm is safe: it opens its own
+    // connection and re-reads config.toml from scratch, and
+    // manage_existing_clients picks back up every window that's still
+    // mapped, exactly as it would on a normal startup.
+    if RESTART_REQUESTED.load(Ordering::SeqCst) {
+        // `wm.run()` sets SIGCHLD to SIG_IGN so spawned commands never
+        // become zombies; per POSIX that disposition (uniquely among
+        // signal actions) survives exec(), so the freshly re-exec'd pwm
+        // would inherit it too - and its own startup, which shells out to
+        // `xmodmap` and waits on it (parse_keybindings_with_xmodmap), would
+        // find the child already reaped out from under it and fail with
+        // ECHILD. Reset it to the default before handing off.
+        //
+        // SAFETY: no other signal handling is set up at this point (we're
+        // past `wm.run()`, which is the only thing that touches SIGCHLD),
+        // so there's no handler-safety hazard in changing the disposition.
+        if let Err(e) = unsafe { signal(Signal::SIGCHLD, SigHandler::SigDfl) } {
+            warn!(%e, "failed to reset SIGCHLD disposition before restart");
+        }
+
+        let exe = std::env::current_exe()?;
+        let err = std::process::Command::new(exe).exec();
+        // `exec` only returns if it failed to replace the process image.
+        panic!("failed to re-exec pwm for restart: {err}");
+    }
+
+    Ok(())
 }

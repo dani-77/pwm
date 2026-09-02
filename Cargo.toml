@@ -1,12 +1,17 @@
 [package]
 name = "pwm"
-version = "0.6.2"
+version = "0.6.3"
 description = "Pipa Window Manager, a light Penrose Libraries WM."
 authors = ["Daniel Azevedo", "dani-77 <daniazevedo77@posteo.net>"]
 license = "MIT"
 edition = "2024"
 
 [dependencies]
+# Already pulled in transitively by penrose (which uses it to set SIGCHLD to
+# SigIgn in WindowManager::run) - declared directly too so main.rs can reset
+# that disposition before restart() re-execs the binary. Pinned to the same
+# major.minor penrose itself resolves to, to avoid a second copy.
+nix = { version = "0.30", default-features = false, features = ["signal"] }
 penrose = "0.4.0"
 penrose_ui = "0.4.0"
 serde = { version = "1.0.229", features = ["derive"] }
