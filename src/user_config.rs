@@ -1,6 +1,6 @@
 //! User-editable configuration, loaded from `~/.config/pwm/config.toml`.
 //!
-//! This file is read once at startup (see [`load_theme`]); there is no hot
+//! This file is read once at startup (see [`load`]); there is no hot
 //! reload yet, so changes only take effect after logging out and back in.
 //! Anything missing, malformed, or simply absent falls back to sane
 //! built-in defaults rather than failing to start the window manager.
@@ -95,6 +95,18 @@ fn default_bar_widgets() -> Vec<String> {
     .collect()
 }
 
+/// A single keybinding: `key` is the same string format
+/// `parse_keybindings_with_xmodmap` already accepts (e.g. `"M-j"`), `action`
+/// names one of keybindings.rs's built-in actions, and `arg` carries that
+/// action's parameter when it takes one (e.g. `spawn`'s command, or
+/// `inc_main`'s amount).
+#[derive(Debug, Clone)]
+pub struct BindSpec {
+    pub key: String,
+    pub action: String,
+    pub arg: Option<String>,
+}
+
 /// Everything resolved from `config.toml`, ready for `main` to hand out.
 #[derive(Debug, Clone)]
 pub struct UserConfig {
@@ -102,6 +114,10 @@ pub struct UserConfig {
     pub apps: Apps,
     pub window_rules: Vec<WindowRule>,
     pub bar_widgets: Vec<String>,
+    /// `None` means `config.toml` had no `[[bind]]` entries at all, so
+    /// keybindings.rs should use its own hardcoded defaults unchanged.
+    /// `Some(specs)` replaces them entirely - see [`crate::keybindings`].
+    pub binds: Option<Vec<BindSpec>>,
 }
 
 /// The themes pwm ships with. `d77` is the original hand-picked palette
@@ -172,6 +188,15 @@ struct RawConfig {
     window_rules: Vec<RawWindowRule>,
     #[serde(default)]
     bar: RawBar,
+    #[serde(default, rename = "bind")]
+    binds: Vec<RawBind>,
+}
+
+#[derive(Debug, Deserialize)]
+struct RawBind {
+    key: String,
+    action: String,
+    arg: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -346,6 +371,24 @@ fn resolve_window_rules(raw: Vec<RawWindowRule>) -> Vec<WindowRule> {
         .collect()
 }
 
+/// `None` if `config.toml` has no `[[bind]]` entries (use the built-in
+/// keymap unchanged); `Some` with a fully-replacing list otherwise.
+fn resolve_binds(raw: Vec<RawBind>) -> Option<Vec<BindSpec>> {
+    if raw.is_empty() {
+        return None;
+    }
+
+    Some(
+        raw.into_iter()
+            .map(|b| BindSpec {
+                key: b.key,
+                action: b.action,
+                arg: b.arg,
+            })
+            .collect(),
+    )
+}
+
 /// Reads `config.toml` once (see [`read_raw_config`]) and resolves every
 /// section it can be missing or invalid in from it.
 pub fn load() -> UserConfig {
@@ -356,5 +399,6 @@ pub fn load() -> UserConfig {
         apps: raw.apps.resolve(),
         window_rules: resolve_window_rules(raw.window_rules),
         bar_widgets: raw.bar.widgets.unwrap_or_else(default_bar_widgets),
+        binds: resolve_binds(raw.binds),
     }
 }

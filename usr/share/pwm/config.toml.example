@@ -1,0 +1,88 @@
+# pwm config.toml example
+#
+# Copy this file to ~/.config/pwm/config.toml (or
+# $XDG_CONFIG_HOME/pwm/config.toml) and uncomment/edit whatever you want to
+# change. Everything here is optional - anything you leave out keeps pwm's
+# built-in default, and a missing or invalid config.toml never stops pwm
+# from starting.
+#
+# This file is only read once, at startup - there is no hot reload yet, so
+# changes need a logout/login (or a fresh `startx`) to take effect.
+
+# ── Theme ────────────────────────────────────────────────────────────────
+# Built-in themes: d77 (default), gruvbox_dark, arc_dark, dracula,
+# tokyo_night. An unknown name here falls back to d77 with a warning.
+[theme]
+# active = "d77"
+
+# You can also define your own theme, or override a built-in one by reusing
+# its name. Colors are hex strings - "0xRRGGBBAA", "0xRRGGBB", "#RRGGBBAA"
+# and "#RRGGBB" all work (a missing alpha defaults to fully opaque).
+# [theme.my_theme]
+# black  = "#282828"
+# white  = "#ebdbb2"
+# grey   = "#3c3836"
+# accent = "#aa96da"
+# font   = "JetBrainsMono Nerd Font"
+
+# ── Applications ─────────────────────────────────────────────────────────
+[apps]
+# terminal = "st"
+# launcher = "dmenu_run"
+# locker = "slock"
+# startup_script = "/etc/xdg/pwm/startup.sh"
+
+# ── Window rules ─────────────────────────────────────────────────────────
+# Which window class opens on which tag. Defining ANY [[window_rule]] here
+# replaces the whole built-in list rather than adding to it, so list every
+# rule you want once you use this at all.
+# [[window_rule]]
+# class = "firefox"
+# workspace = "9"
+
+# [[window_rule]]
+# class = "mpv"
+# workspace = "5"
+
+# ── Status bar ───────────────────────────────────────────────────────────
+# Which widgets show in the bar, and in what order. Available names:
+# workspaces, layout, window_name, cpu, ram, volume, wifi, battery, clock.
+[bar]
+# widgets = [
+#     "workspaces", "layout", "window_name",
+#     "cpu", "ram", "volume", "wifi", "battery", "clock",
+# ]
+
+# ── Keybindings ──────────────────────────────────────────────────────────
+# Defining ANY [[bind]] here replaces the ENTIRE built-in keymap rather than
+# adding to it. Keep a way to open a terminal (spawn_terminal/spawn) and to
+# exit (exit) among your binds, or you may need to switch to another VT to
+# recover. Key strings use the same format penrose expects elsewhere, e.g.
+# "M-j", "M-S-Return", "XF86AudioRaiseVolume".
+#
+# Available actions:
+#   focus_down, focus_up, swap_down, swap_up, kill_focused,
+#   toggle_fullscreen, toggle_tag, next_screen, previous_screen,
+#   next_layout, previous_layout, expand_main, shrink_main,
+#   inc_main         (arg: a signed integer, e.g. "1" or "-1")
+#   spawn_terminal, spawn_launcher, spawn_locker,
+#   spawn            (arg: any shell command)
+#   toggle_scratchpad (can only be bound once)
+#   logout_menu, log_state, exit
+#
+# [[bind]]
+# key = "M-j"
+# action = "focus_down"
+#
+# [[bind]]
+# key = "M-Return"
+# action = "spawn_terminal"
+#
+# [[bind]]
+# key = "M-Up"
+# action = "inc_main"
+# arg = "1"
+#
+# [[bind]]
+# key = "M-S-q"
+# action = "exit"

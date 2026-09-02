@@ -77,7 +77,12 @@ fn main() -> Result<()> {
     let conn = RustConn::new()?;
 
     // Parse keybindings
-    let key_bindings = parse_keybindings_with_xmodmap(raw_key_bindings(toggle_nsp, theme, apps))?;
+    let key_bindings = parse_keybindings_with_xmodmap(raw_key_bindings(
+        toggle_nsp,
+        theme,
+        apps,
+        user_config.binds.as_deref(),
+    ))?;
 
     // Create status bar
     let bar =

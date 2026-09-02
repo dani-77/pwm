@@ -15,9 +15,10 @@ use penrose::{
     util::spawn as spawn_cmd,
 };
 use std::collections::HashMap;
+use tracing::warn;
 
 use crate::config::WORKSPACES;
-use crate::user_config::{Apps, Theme};
+use crate::user_config::{Apps, BindSpec, Theme};
 
 type KeyHandler = Box<dyn KeyEventHandler<RustConn>>;
 
@@ -30,8 +31,12 @@ fn leak(s: String) -> &'static str {
     Box::leak(s.into_boxed_str())
 }
 
-/// Creates the main keybindings
-pub fn raw_key_bindings(
+/// The default keymap, used whenever `config.toml` has no `[[bind]]`
+/// entries. This is the same map that existed before `[[bind]]` support
+/// was added - kept as plain code (rather than expressed as a list of
+/// [`BindSpec`]s run through [`action_for`]) so pwm always has a keymap
+/// that works even if config.toml parsing/dispatch itself had a bug.
+fn default_bindings(
     toggle_scratchpad: ToggleNamedScratchPad,
     theme: &Theme,
     apps: &Apps,
@@ -40,7 +45,7 @@ pub fn raw_key_bindings(
     let launcher = leak(apps.launcher.clone());
     let locker = leak(apps.locker.clone());
 
-    let mut raw_bindings = map! {
+    map! {
         map_keys: |k: &str| k.to_string();
 
         // Window navigation
@@ -85,6 +90,100 @@ pub fn raw_key_bindings(
         "XF86AudioRaiseVolume" => spawn_action("pactl set-sink-volume @DEFAULT_SINK@ +5%"),
         "XF86AudioLowerVolume" => spawn_action("pactl set-sink-volume @DEFAULT_SINK@ -5%"),
         "XF86AudioMute" => spawn_action("pactl set-sink-mute @DEFAULT_SINK@ toggle"),
+    }
+}
+
+// The named actions [[bind]] entries in config.toml can refer to. Mirrors
+// exactly what default_bindings() above wires up by hand, so the two stay
+// interchangeable. `toggle_scratchpad` can only ever be bound once (the
+// underlying ToggleNamedScratchPad isn't Copy/Clone), so a second [[bind]]
+// naming it - or an unrecognized action name - both fall through to the
+// warning in bindings_from_specs() below rather than failing to start.
+fn action_for(
+    action: &str,
+    arg: Option<&str>,
+    theme: &Theme,
+    apps: &Apps,
+    toggle_scratchpad: &mut Option<ToggleNamedScratchPad>,
+) -> Option<KeyHandler> {
+    Some(match action {
+        "focus_down" => modify_with(|cs| cs.focus_down()),
+        "focus_up" => modify_with(|cs| cs.focus_up()),
+        "swap_down" => modify_with(|cs| cs.swap_down()),
+        "swap_up" => modify_with(|cs| cs.swap_up()),
+        "kill_focused" => modify_with(|cs| cs.kill_focused()),
+        "toggle_fullscreen" => toggle_fullscreen(),
+        "toggle_tag" => modify_with(|cs| cs.toggle_tag()),
+        "next_screen" => modify_with(|cs| cs.next_screen()),
+        "previous_screen" => modify_with(|cs| cs.previous_screen()),
+        "next_layout" => modify_with(|cs| cs.next_layout()),
+        "previous_layout" => modify_with(|cs| cs.previous_layout()),
+        "expand_main" => send_layout_message(|| ExpandMain),
+        "shrink_main" => send_layout_message(|| ShrinkMain),
+        "inc_main" => {
+            let amount: i8 = arg.and_then(|a| a.parse().ok()).unwrap_or(1);
+            send_layout_message(move || IncMain(amount))
+        }
+        "spawn_terminal" => spawn_action(leak(apps.terminal.clone())),
+        "spawn_launcher" => spawn_action(leak(apps.launcher.clone())),
+        "spawn_locker" => spawn_action(leak(apps.locker.clone())),
+        "spawn" => spawn_action(leak(arg?.to_string())),
+        "toggle_scratchpad" => Box::new(toggle_scratchpad.take()?),
+        "logout_menu" => logout_menu(theme),
+        "log_state" => log_current_state(),
+        "exit" => exit(),
+        _ => return None,
+    })
+}
+
+/// Builds the keymap from `config.toml`'s `[[bind]]` entries. Unrecognized
+/// action names, and any use of `toggle_scratchpad` beyond the first, are
+/// skipped with a warning rather than refusing to start - a typo in one
+/// bind shouldn't cost you every other one.
+fn bindings_from_specs(
+    specs: &[BindSpec],
+    toggle_scratchpad: ToggleNamedScratchPad,
+    theme: &Theme,
+    apps: &Apps,
+) -> HashMap<String, KeyHandler> {
+    let mut toggle_scratchpad = Some(toggle_scratchpad);
+    let mut bindings = HashMap::new();
+
+    for spec in specs {
+        match action_for(
+            &spec.action,
+            spec.arg.as_deref(),
+            theme,
+            apps,
+            &mut toggle_scratchpad,
+        ) {
+            Some(handler) => {
+                bindings.insert(spec.key.clone(), handler);
+            }
+            None => warn!(
+                key = spec.key,
+                action = spec.action,
+                "unknown action or action already bound elsewhere, skipping"
+            ),
+        }
+    }
+
+    bindings
+}
+
+/// Creates the main keybindings: config.toml's `[[bind]]` list if it has
+/// one, otherwise the built-in defaults. Either way, the per-workspace
+/// M-<tag>/M-S-<tag> bindings are always added on top - they're generated
+/// from `WORKSPACES` rather than something to hand-write per binding.
+pub fn raw_key_bindings(
+    toggle_scratchpad: ToggleNamedScratchPad,
+    theme: &Theme,
+    apps: &Apps,
+    binds: Option<&[BindSpec]>,
+) -> HashMap<String, KeyHandler> {
+    let mut raw_bindings = match binds {
+        Some(specs) => bindings_from_specs(specs, toggle_scratchpad, theme, apps),
+        None => default_bindings(toggle_scratchpad, theme, apps),
     };
 
     // Add bindings for workspaces
