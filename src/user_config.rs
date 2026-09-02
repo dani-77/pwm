@@ -25,6 +25,85 @@ pub struct Theme {
 const DEFAULT_FONT: &str = "JetBrainsMono Nerd Font";
 const DEFAULT_THEME_NAME: &str = "d77";
 
+/// Resolved application settings: which programs the "spawn a terminal" /
+/// "spawn a launcher" / "lock the screen" keybindings run, and where the
+/// startup script lives.
+#[derive(Debug, Clone)]
+pub struct Apps {
+    pub terminal: String,
+    pub launcher: String,
+    pub locker: String,
+    pub startup_script: String,
+}
+
+impl Default for Apps {
+    fn default() -> Self {
+        Self {
+            terminal: "st".to_string(),
+            launcher: "dmenu_run".to_string(),
+            locker: "slock".to_string(),
+            startup_script: "/etc/xdg/pwm/startup.sh".to_string(),
+        }
+    }
+}
+
+/// A single "windows of this class open on this tag" rule.
+#[derive(Debug, Clone)]
+pub struct WindowRule {
+    pub class: String,
+    pub workspace: String,
+}
+
+/// The rules pwm ships with, applied when `config.toml` has no
+/// `[[window_rule]]` entries of its own.
+fn default_window_rules() -> Vec<WindowRule> {
+    [
+        ("gimp", "3"),
+        ("deadbeef", "5"),
+        ("mpv", "5"),
+        ("ncspot", "5"),
+        ("spotify", "5"),
+        ("thunderbird", "9"),
+        ("chromium", "9"),
+        ("firefox", "9"),
+        ("qutebrowser", "9"),
+    ]
+    .into_iter()
+    .map(|(class, workspace)| WindowRule {
+        class: class.to_string(),
+        workspace: workspace.to_string(),
+    })
+    .collect()
+}
+
+/// The bar widgets pwm ships with, in order, applied when `config.toml`
+/// doesn't set `[bar] widgets`.
+fn default_bar_widgets() -> Vec<String> {
+    [
+        "workspaces",
+        "layout",
+        "window_name",
+        "cpu",
+        "ram",
+        "volume",
+        "wifi",
+        "battery",
+        "clock",
+    ]
+    .into_iter()
+    .map(str::to_string)
+    .collect()
+}
+
+/// Everything resolved from `config.toml`, ready for `main` to hand out.
+#[derive(Debug, Clone)]
+pub struct UserConfig {
+    pub theme: Theme,
+    pub apps: Apps,
+    pub window_rules: Vec<WindowRule>,
+    pub bar_widgets: Vec<String>,
+}
+
 /// The themes pwm ships with. `d77` is the original hand-picked palette
 /// (Gruvbox Dark + a custom lavender accent); the others are sourced from
 /// each project's own published palette.
@@ -87,6 +166,45 @@ fn builtin_themes() -> HashMap<String, Theme> {
 struct RawConfig {
     #[serde(default)]
     theme: RawThemeSection,
+    #[serde(default)]
+    apps: RawApps,
+    #[serde(default, rename = "window_rule")]
+    window_rules: Vec<RawWindowRule>,
+    #[serde(default)]
+    bar: RawBar,
+}
+
+#[derive(Debug, Deserialize)]
+struct RawWindowRule {
+    class: String,
+    workspace: String,
+}
+
+#[derive(Debug, Default, Deserialize)]
+struct RawBar {
+    widgets: Option<Vec<String>>,
+}
+
+#[derive(Debug, Default, Deserialize)]
+struct RawApps {
+    terminal: Option<String>,
+    launcher: Option<String>,
+    locker: Option<String>,
+    startup_script: Option<String>,
+}
+
+impl RawApps {
+    /// Overlays whichever fields were set in `config.toml` on top of the
+    /// built-in defaults.
+    fn resolve(self) -> Apps {
+        let default = Apps::default();
+        Apps {
+            terminal: self.terminal.unwrap_or(default.terminal),
+            launcher: self.launcher.unwrap_or(default.launcher),
+            locker: self.locker.unwrap_or(default.locker),
+            startup_script: self.startup_script.unwrap_or(default.startup_script),
+        }
+    }
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -184,21 +302,20 @@ fn read_raw_config() -> RawConfig {
     }
 }
 
-/// Loads the active theme for this session: built-in themes, overlaid with
-/// any palettes defined in `config.toml`, selecting whichever one
-/// `[theme].active` names (defaulting to `"d77"`, and falling back to it if
-/// the requested name doesn't exist).
-pub fn load_theme() -> Theme {
-    let raw = read_raw_config();
+/// Resolves the active theme: built-in themes, overlaid with any palettes
+/// defined in `config.toml`, selecting whichever one `[theme].active` names
+/// (defaulting to `"d77"`, and falling back to it if the requested name
+/// doesn't exist).
+fn resolve_theme(raw: RawThemeSection) -> Theme {
     let mut themes = builtin_themes();
     let default_theme = themes[DEFAULT_THEME_NAME].clone();
 
-    for (name, raw_theme) in &raw.theme.palettes {
+    for (name, raw_theme) in &raw.palettes {
         let fallback = themes.get(name).unwrap_or(&default_theme).clone();
         themes.insert(name.clone(), raw_theme.resolve(name, &fallback));
     }
 
-    let active = raw.theme.active.as_deref().unwrap_or(DEFAULT_THEME_NAME);
+    let active = raw.active.as_deref().unwrap_or(DEFAULT_THEME_NAME);
 
     match themes.get(active) {
         Some(theme) => theme.clone(),
@@ -209,5 +326,35 @@ pub fn load_theme() -> Theme {
             );
             default_theme
         }
+    }
+}
+
+/// Resolves window rules: `config.toml`'s `[[window_rule]]` entries replace
+/// the built-in defaults entirely if there are any at all, rather than
+/// merging with them - a `config.toml` that wants its own rules is expected
+/// to list all of them.
+fn resolve_window_rules(raw: Vec<RawWindowRule>) -> Vec<WindowRule> {
+    if raw.is_empty() {
+        return default_window_rules();
+    }
+
+    raw.into_iter()
+        .map(|r| WindowRule {
+            class: r.class,
+            workspace: r.workspace,
+        })
+        .collect()
+}
+
+/// Reads `config.toml` once (see [`read_raw_config`]) and resolves every
+/// section it can be missing or invalid in from it.
+pub fn load() -> UserConfig {
+    let raw = read_raw_config();
+
+    UserConfig {
+        theme: resolve_theme(raw.theme),
+        apps: raw.apps.resolve(),
+        window_rules: resolve_window_rules(raw.window_rules),
+        bar_widgets: raw.bar.widgets.unwrap_or_else(default_bar_widgets),
     }
 }

@@ -7,12 +7,11 @@ mod user_config;
 use penrose::x11rb::RustConn;
 use penrose::{
     Result,
-    core::{Config, WindowManager, bindings::parse_keybindings_with_xmodmap},
+    core::{Config, WindowManager, bindings::parse_keybindings_with_xmodmap, hooks::ManageHook},
     extensions::hooks::{
         NamedScratchPad, SpawnOnStartup, add_ewmh_hooks, add_named_scratchpads,
         manage::{FloatingCentered, SetWorkspace},
     },
-    manage_hooks,
     x::query::ClassName,
 };
 use tracing_subscriber::{self, prelude::*};
@@ -29,20 +28,27 @@ fn main() -> Result<()> {
         .init();
 
     // Load configuration
-    let theme = user_config::load_theme();
-    let pwm_config = PwmConfig::new(&theme);
+    let user_config = user_config::load();
+    let theme = &user_config.theme;
+    let apps = &user_config.apps;
+    let pwm_config = PwmConfig::new(theme);
 
-    // Window management hooks
-    let my_manage_hook = manage_hooks! {
-        ClassName("gimp") => SetWorkspace("3"),
-        ClassName("deadbeef") => SetWorkspace("5"),
-        ClassName("mpv") => SetWorkspace("5"),
-        ClassName("ncspot") => SetWorkspace("5"),
-        ClassName("spotify") => SetWorkspace("5"),
-        ClassName("thunderbird") => SetWorkspace("9"),
-        ClassName("chromium") => SetWorkspace("9"),
-        ClassName("firefox") => SetWorkspace("9"),
-        ClassName("qutebrowser") => SetWorkspace("9"),
+    // Window management hooks: which window class opens on which tag.
+    // ClassName/SetWorkspace both need a &'static str; window_rules is
+    // loaded once at startup, so leaking it (same tradeoff as the app
+    // names in keybindings.rs) is fine for the life of the process.
+    let my_manage_hook: Box<dyn ManageHook<RustConn>> = {
+        let hooks: Vec<Box<dyn ManageHook<RustConn>>> = user_config
+            .window_rules
+            .iter()
+            .map(|rule| {
+                let class: &'static str = Box::leak(rule.class.clone().into_boxed_str());
+                let workspace: &'static str = Box::leak(rule.workspace.clone().into_boxed_str());
+                ManageHook::boxed((ClassName(class), SetWorkspace(workspace)))
+            })
+            .collect();
+
+        Box::new(hooks)
     };
 
     // Penrose configuration
@@ -51,7 +57,7 @@ fn main() -> Result<()> {
         normal_border: pwm_config.normal_border,
         default_layouts: layouts(),
         manage_hook: Some(my_manage_hook),
-        startup_hook: Some(SpawnOnStartup::boxed(pwm_config.apps.startup_script)),
+        startup_hook: Some(SpawnOnStartup::boxed(apps.startup_script.clone())),
         ..Config::default()
     });
 
@@ -71,10 +77,11 @@ fn main() -> Result<()> {
     let conn = RustConn::new()?;
 
     // Parse keybindings
-    let key_bindings = parse_keybindings_with_xmodmap(raw_key_bindings(toggle_nsp, &theme))?;
+    let key_bindings = parse_keybindings_with_xmodmap(raw_key_bindings(toggle_nsp, theme, apps))?;
 
     // Create status bar
-    let bar = bar::status_bar(&theme).expect("failed to create status bar");
+    let bar =
+        bar::status_bar(theme, &user_config.bar_widgets).expect("failed to create status bar");
 
     // Create window manager
     let wm = bar.add_to(WindowManager::new(

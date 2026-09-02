@@ -14,6 +14,7 @@ use penrose_ui::{
     },
 };
 use std::{fs, sync::Mutex, time::Duration};
+use tracing::warn;
 
 use crate::user_config::Theme;
 
@@ -138,7 +139,52 @@ fn ram_percent() -> Option<String> {
     Some(format!("\u{e266} {pct}%"))
 }
 
-fn widgets<X: XConn>(theme: &Theme) -> Vec<Box<dyn Widget<X>>> {
+// Builds a single named widget, given the shared style/color values every widget draws
+// from. Returns None (after logging a warning) for a name config.toml got wrong, so a
+// typo just drops that one widget instead of failing to start the bar.
+fn widget_by_name<X: XConn + 'static>(
+    name: &str,
+    style: TextStyle,
+    pstyle: TextStyle,
+    highlight: Color,
+    empty_ws: Color,
+    bat: &'static str,
+) -> Option<Box<dyn Widget<X>>> {
+    let ms = |n: u64| Duration::from_millis(n);
+
+    let widget: Box<dyn Widget<X>> = match name {
+        "workspaces" => Box::new(Workspaces::new(style, highlight, empty_ws)),
+        "layout" => Box::new(CurrentLayout::new(style)),
+        "window_name" => Box::new(ActiveWindowName::new(
+            MAX_ACTIVE_WINDOW_CHARS,
+            TextStyle {
+                bg: Some(highlight),
+                padding: (6, 4),
+                ..style
+            },
+            true,
+            false,
+        )),
+        "cpu" => Box::new(cpu_usage(pstyle, ms(2000))),
+        "ram" => Box::new(RefreshText::new(pstyle, || {
+            ram_percent().unwrap_or_default()
+        })),
+        "volume" => Box::new(amixer_volume("Master", pstyle, ms(1000))),
+        "wifi" => Box::new(wifi_network(pstyle)),
+        "battery" => Box::new(RefreshText::new(pstyle, move || {
+            battery_percent(bat).unwrap_or_default()
+        })),
+        "clock" => Box::new(current_date_and_time(pstyle, ms(10_000))),
+        _ => {
+            warn!(widget = name, "unknown bar widget, skipping");
+            return None;
+        }
+    };
+
+    Some(widget)
+}
+
+fn widgets<X: XConn + 'static>(theme: &Theme, names: &[String]) -> Vec<Box<dyn Widget<X>>> {
     let highlight: Color = theme.accent.into();
     let empty_ws: Color = theme.grey.into();
 
@@ -153,45 +199,26 @@ fn widgets<X: XConn>(theme: &Theme) -> Vec<Box<dyn Widget<X>>> {
         ..style
     };
 
-    let ms = |n: u64| Duration::from_millis(n);
-
     let bat: &'static str = battery_file_search()
         .map(|s| Box::leak(s.into_boxed_str()) as &'static str)
         .unwrap_or("BAT0");
 
-    vec![
-        Box::new(Workspaces::new(style, highlight, empty_ws)),
-        Box::new(CurrentLayout::new(style)),
-        Box::new(ActiveWindowName::new(
-            MAX_ACTIVE_WINDOW_CHARS,
-            TextStyle {
-                bg: Some(highlight),
-                padding: (6, 4),
-                ..style
-            },
-            true,
-            false,
-        )),
-        Box::new(cpu_usage(pstyle, ms(2000))),
-        Box::new(RefreshText::new(pstyle, || {
-            ram_percent().unwrap_or_default()
-        })),
-        Box::new(amixer_volume("Master", pstyle, ms(1000))),
-        Box::new(wifi_network(pstyle)),
-        Box::new(RefreshText::new(pstyle, move || {
-            battery_percent(bat).unwrap_or_default()
-        })),
-        Box::new(current_date_and_time(pstyle, ms(10_000))),
-    ]
+    names
+        .iter()
+        .filter_map(|name| widget_by_name(name, style, pstyle, highlight, empty_ws, bat))
+        .collect()
 }
 
-pub fn status_bar<X: XConn>(theme: &Theme) -> Result<StatusBar<X>> {
+pub fn status_bar<X: XConn + 'static>(
+    theme: &Theme,
+    widget_names: &[String],
+) -> Result<StatusBar<X>> {
     StatusBar::try_new(
         Position::Top,
         BAR_HEIGHT_PX,
         Color::new_from_hex(theme.black),
         &theme.font,
         BAR_POINT_SIZE,
-        widgets(theme),
+        widgets(theme, widget_names),
     )
 }

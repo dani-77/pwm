@@ -17,15 +17,29 @@ use penrose::{
 use std::collections::HashMap;
 
 use crate::config::WORKSPACES;
-use crate::user_config::Theme;
+use crate::user_config::{Apps, Theme};
 
 type KeyHandler = Box<dyn KeyEventHandler<RustConn>>;
+
+// spawn_action (penrose::builtin::actions::spawn) takes a &'static str, but
+// the program names come from config.toml as owned Strings loaded once at
+// startup - leaking them is the same "runtime String -> &'static str"
+// tradeoff already used for the battery name in bar.rs and for window rule
+// class names/tags, and is fine for values that live for the process' life.
+fn leak(s: String) -> &'static str {
+    Box::leak(s.into_boxed_str())
+}
 
 /// Creates the main keybindings
 pub fn raw_key_bindings(
     toggle_scratchpad: ToggleNamedScratchPad,
     theme: &Theme,
+    apps: &Apps,
 ) -> HashMap<String, KeyHandler> {
+    let terminal = leak(apps.terminal.clone());
+    let launcher = leak(apps.launcher.clone());
+    let locker = leak(apps.locker.clone());
+
     let mut raw_bindings = map! {
         map_keys: |k: &str| k.to_string();
 
@@ -55,9 +69,9 @@ pub fn raw_key_bindings(
         "M-Left" => send_layout_message(|| ShrinkMain),
 
         // Applications
-        "M-Return" => spawn_action("st"),
-        "M-d" => spawn_action("dmenu_run"),
-        "M-t" => spawn_action("slock"),
+        "M-Return" => spawn_action(terminal),
+        "M-d" => spawn_action(launcher),
+        "M-t" => spawn_action(locker),
 
         // Scratchpad
         "M-s" => Box::new(toggle_scratchpad),

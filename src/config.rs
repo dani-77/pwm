@@ -27,26 +27,6 @@ impl Default for LayoutConfig {
 /// Workspace settings
 pub const WORKSPACES: [&str; 9] = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 
-/// Application settings
-#[allow(dead_code)]
-pub struct AppConfig {
-    pub terminal: &'static str,
-    pub launcher: &'static str,
-    pub locker: &'static str,
-    pub startup_script: &'static str,
-}
-
-impl Default for AppConfig {
-    fn default() -> Self {
-        Self {
-            terminal: "st",
-            launcher: "dmenu_run",
-            locker: "slock",
-            startup_script: "/etc/xdg/pwm/startup.sh",
-        }
-    }
-}
-
 /// Scratchpad settings
 pub struct ScratchPadConfig {
     pub name: &'static str,
@@ -74,7 +54,6 @@ pub struct PwmConfig {
     pub focused_border: Color,
     pub normal_border: Color,
     pub layout: LayoutConfig,
-    pub apps: AppConfig,
     pub scratchpad: ScratchPadConfig,
 }
 
@@ -84,7 +63,6 @@ impl PwmConfig {
             focused_border: theme.accent.into(),
             normal_border: theme.grey.into(),
             layout: LayoutConfig::default(),
-            apps: AppConfig::default(),
             scratchpad: ScratchPadConfig::default(),
         }
     }
