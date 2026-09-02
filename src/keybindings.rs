@@ -31,13 +31,18 @@ fn leak(s: String) -> &'static str {
     Box::leak(s.into_boxed_str())
 }
 
-/// The default keymap, used whenever `config.toml` has no `[[bind]]`
-/// entries. This is the same map that existed before `[[bind]]` support
-/// was added - kept as plain code (rather than expressed as a list of
-/// [`BindSpec`]s run through [`action_for`]) so pwm always has a keymap
-/// that works even if config.toml parsing/dispatch itself had a bug.
+/// The default keymap, always used as the base that `config.toml`'s
+/// `[[bind]]` entries (if any) get overlaid onto by [`raw_key_bindings`].
+/// Kept as plain code (rather than expressed as a list of [`BindSpec`]s run
+/// through [`action_for`]) so pwm always has a keymap that works even if
+/// config.toml parsing/dispatch itself had a bug.
+///
+/// `toggle_scratchpad` is `None` when a `[[bind]]` entry claims the
+/// `toggle_scratchpad` action for a different key - see
+/// [`raw_key_bindings`] - in which case the default `M-s` binding for it is
+/// simply omitted rather than binding an object that's already been moved.
 fn default_bindings(
-    toggle_scratchpad: ToggleNamedScratchPad,
+    toggle_scratchpad: Option<ToggleNamedScratchPad>,
     theme: &Theme,
     apps: &Apps,
 ) -> HashMap<String, KeyHandler> {
@@ -45,7 +50,7 @@ fn default_bindings(
     let launcher = leak(apps.launcher.clone());
     let locker = leak(apps.locker.clone());
 
-    map! {
+    let mut bindings = map! {
         map_keys: |k: &str| k.to_string();
 
         // Window navigation
@@ -78,9 +83,6 @@ fn default_bindings(
         "M-d" => spawn_action(launcher),
         "M-t" => spawn_action(locker),
 
-        // Scratchpad
-        "M-s" => Box::new(toggle_scratchpad),
-
         // System
         "M-x" => logout_menu(theme),
         "M-S-s" => log_current_state(),
@@ -90,7 +92,14 @@ fn default_bindings(
         "XF86AudioRaiseVolume" => spawn_action("pactl set-sink-volume @DEFAULT_SINK@ +5%"),
         "XF86AudioLowerVolume" => spawn_action("pactl set-sink-volume @DEFAULT_SINK@ -5%"),
         "XF86AudioMute" => spawn_action("pactl set-sink-mute @DEFAULT_SINK@ toggle"),
+    };
+
+    // Scratchpad - see the toggle_scratchpad param's doc comment above
+    if let Some(toggle_scratchpad) = toggle_scratchpad {
+        bindings.insert("M-s".to_string(), Box::new(toggle_scratchpad));
     }
+
+    bindings
 }
 
 // The named actions [[bind]] entries in config.toml can refer to. Mirrors
@@ -98,7 +107,7 @@ fn default_bindings(
 // interchangeable. `toggle_scratchpad` can only ever be bound once (the
 // underlying ToggleNamedScratchPad isn't Copy/Clone), so a second [[bind]]
 // naming it - or an unrecognized action name - both fall through to the
-// warning in bindings_from_specs() below rather than failing to start.
+// warning in raw_key_bindings() below rather than failing to start.
 fn action_for(
     action: &str,
     arg: Option<&str>,
@@ -136,55 +145,55 @@ fn action_for(
     })
 }
 
-/// Builds the keymap from `config.toml`'s `[[bind]]` entries. Unrecognized
-/// action names, and any use of `toggle_scratchpad` beyond the first, are
-/// skipped with a warning rather than refusing to start - a typo in one
-/// bind shouldn't cost you every other one.
-fn bindings_from_specs(
-    specs: &[BindSpec],
-    toggle_scratchpad: ToggleNamedScratchPad,
-    theme: &Theme,
-    apps: &Apps,
-) -> HashMap<String, KeyHandler> {
-    let mut toggle_scratchpad = Some(toggle_scratchpad);
-    let mut bindings = HashMap::new();
-
-    for spec in specs {
-        match action_for(
-            &spec.action,
-            spec.arg.as_deref(),
-            theme,
-            apps,
-            &mut toggle_scratchpad,
-        ) {
-            Some(handler) => {
-                bindings.insert(spec.key.clone(), handler);
-            }
-            None => warn!(
-                key = spec.key,
-                action = spec.action,
-                "unknown action or action already bound elsewhere, skipping"
-            ),
-        }
-    }
-
-    bindings
-}
-
-/// Creates the main keybindings: config.toml's `[[bind]]` list if it has
-/// one, otherwise the built-in defaults. Either way, the per-workspace
-/// M-<tag>/M-S-<tag> bindings are always added on top - they're generated
-/// from `WORKSPACES` rather than something to hand-write per binding.
+/// Creates the main keybindings: the built-in defaults, with `config.toml`'s
+/// `[[bind]]` entries (if any) overlaid on top key by key - a `[[bind]]` for
+/// a key that already does something replaces just that one binding, every
+/// other default stays intact. Unrecognized action names, and any use of
+/// `toggle_scratchpad` beyond the first, are skipped with a warning rather
+/// than refusing to start - a typo in one bind shouldn't cost you every
+/// other one. Per-workspace M-<tag>/M-S-<tag> bindings are always added on
+/// top of everything else - they're generated from `WORKSPACES` rather than
+/// something to hand-write per binding.
 pub fn raw_key_bindings(
     toggle_scratchpad: ToggleNamedScratchPad,
     theme: &Theme,
     apps: &Apps,
     binds: Option<&[BindSpec]>,
 ) -> HashMap<String, KeyHandler> {
-    let mut raw_bindings = match binds {
-        Some(specs) => bindings_from_specs(specs, toggle_scratchpad, theme, apps),
-        None => default_bindings(toggle_scratchpad, theme, apps),
+    // If a [[bind]] wants toggle_scratchpad on some other key, the default
+    // M-s binding for it needs to not claim the object first - it can only
+    // be bound once.
+    let moves_scratchpad =
+        binds.is_some_and(|specs| specs.iter().any(|s| s.action == "toggle_scratchpad"));
+    let mut toggle_scratchpad = Some(toggle_scratchpad);
+    let default_scratchpad = if moves_scratchpad {
+        None
+    } else {
+        toggle_scratchpad.take()
     };
+
+    let mut raw_bindings = default_bindings(default_scratchpad, theme, apps);
+
+    if let Some(specs) = binds {
+        for spec in specs {
+            match action_for(
+                &spec.action,
+                spec.arg.as_deref(),
+                theme,
+                apps,
+                &mut toggle_scratchpad,
+            ) {
+                Some(handler) => {
+                    raw_bindings.insert(spec.key.clone(), handler);
+                }
+                None => warn!(
+                    key = spec.key,
+                    action = spec.action,
+                    "unknown action or action already bound elsewhere, skipping"
+                ),
+            }
+        }
+    }
 
     // Add bindings for workspaces
     for tag in WORKSPACES.iter() {

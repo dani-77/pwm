@@ -106,15 +106,17 @@ What you can configure:
   own colors and font under `[theme.<name>]`.
 - **`[apps]`** - which programs `terminal`/`launcher`/`locker` spawn, and
   where `startup_script` lives.
-- **`[[window_rule]]`** - which window class opens on which tag. Defining
-  any rules here replaces the built-in list rather than adding to it.
+- **`[[window_rule]]`** - which window class opens on which tag. Rules are
+  overlaid onto the built-in list by class: one for a class already covered
+  replaces just its tag, a new class gets added, and anything you don't
+  mention keeps its default rule.
 - **`[bar]`** - `widgets`, an ordered list picking which bar widgets show
   (from `workspaces`, `layout`, `window_name`, `cpu`, `ram`, `volume`,
   `wifi`, `battery`, `clock`).
-- **`[[bind]]`** - remap keybindings entirely. Like window rules, any
-  `[[bind]]` entries replace the whole built-in keymap - keep a way to spawn
-  a terminal and to `exit` among them, or you may need to switch to another
-  VT to recover. See the example file for the full list of actions.
+- **`[[bind]]`** - remap or add keybindings. Like window rules, entries are
+  overlaid onto the built-in keymap key by key - a `[[bind]]` for a key that
+  already does something replaces just that one binding, every other
+  default stays as-is. See the example file for the full list of actions.
 
 ## Keybinds
 

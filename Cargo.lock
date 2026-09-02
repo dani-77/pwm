@@ -232,7 +232,7 @@ dependencies = [
 
 [[package]]
 name = "pwm"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "penrose",
  "penrose_ui",

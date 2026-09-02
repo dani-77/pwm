@@ -354,21 +354,24 @@ fn resolve_theme(raw: RawThemeSection) -> Theme {
     }
 }
 
-/// Resolves window rules: `config.toml`'s `[[window_rule]]` entries replace
-/// the built-in defaults entirely if there are any at all, rather than
-/// merging with them - a `config.toml` that wants its own rules is expected
-/// to list all of them.
+/// Resolves window rules: `config.toml`'s `[[window_rule]]` entries are
+/// overlaid onto the built-in defaults by `class` - a rule for a class the
+/// defaults already cover replaces just its `workspace`, a new class is
+/// added, and any class not mentioned keeps its default rule untouched.
 fn resolve_window_rules(raw: Vec<RawWindowRule>) -> Vec<WindowRule> {
-    if raw.is_empty() {
-        return default_window_rules();
+    let mut rules = default_window_rules();
+
+    for r in raw {
+        match rules.iter_mut().find(|existing| existing.class == r.class) {
+            Some(existing) => existing.workspace = r.workspace,
+            None => rules.push(WindowRule {
+                class: r.class,
+                workspace: r.workspace,
+            }),
+        }
     }
 
-    raw.into_iter()
-        .map(|r| WindowRule {
-            class: r.class,
-            workspace: r.workspace,
-        })
-        .collect()
+    rules
 }
 
 /// `None` if `config.toml` has no `[[bind]]` entries (use the built-in

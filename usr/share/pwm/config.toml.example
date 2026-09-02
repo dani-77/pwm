@@ -33,9 +33,11 @@
 # startup_script = "/etc/xdg/pwm/startup.sh"
 
 # ── Window rules ─────────────────────────────────────────────────────────
-# Which window class opens on which tag. Defining ANY [[window_rule]] here
-# replaces the whole built-in list rather than adding to it, so list every
-# rule you want once you use this at all.
+# Which window class opens on which tag. Rules here are overlaid onto the
+# built-in list by class: one for a class already covered below replaces
+# just its workspace, a new class gets added, and any class you don't
+# mention keeps its default rule (gimp -> 3, mpv/deadbeef/ncspot/spotify ->
+# 5, thunderbird/chromium/firefox/qutebrowser -> 9).
 # [[window_rule]]
 # class = "firefox"
 # workspace = "9"
@@ -54,11 +56,13 @@
 # ]
 
 # ── Keybindings ──────────────────────────────────────────────────────────
-# Defining ANY [[bind]] here replaces the ENTIRE built-in keymap rather than
-# adding to it. Keep a way to open a terminal (spawn_terminal/spawn) and to
-# exit (exit) among your binds, or you may need to switch to another VT to
-# recover. Key strings use the same format penrose expects elsewhere, e.g.
-# "M-j", "M-S-Return", "XF86AudioRaiseVolume".
+# Remap or add keybindings. Entries here are overlaid onto the built-in
+# keymap key by key: a [[bind]] for a key that already does something (e.g.
+# "M-j") replaces just that one binding, every other default stays as-is.
+# The one exception is toggle_scratchpad - it can only ever be bound to one
+# key, so pointing a new key at it moves it off the default M-s rather than
+# also keeping M-s bound to it. Key strings use the same format penrose
+# expects elsewhere, e.g. "M-j", "M-S-Return", "XF86AudioRaiseVolume".
 #
 # Available actions:
 #   focus_down, focus_up, swap_down, swap_up, kill_focused,
