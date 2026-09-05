@@ -23,9 +23,13 @@ The WM you all know from where it came.
 
 ## Running Dependencies
 
+- alsa-utils (`amixer`, for the bar's volume level widget)
+
 - dbus
 
 - dmenu
+
+- pulseaudio-utils (`pactl`, for the volume keybindings)
 
 - st
 
@@ -43,6 +47,8 @@ The WM you all know from where it came.
   Nerd Font family available on your system.
 
 ### Optional dependencies
+
+- conky (see [`extras/conky`](extras/conky))
 
 - dunst
 
@@ -137,23 +143,47 @@ super + return -> st (suckless terminal)
 
 super + d -> dmenu (suckless menu)
 
+super + t -> lock screen (slock)
+
+super + j/k -> move focus down/up
+
+super + shift + j/k -> swap focused window down/up
+
 super + shift + f -> full screen toggle
 
-super + j/k -> swap focused window
+super + tab -> toggle back to the previously focused tag
 
-super + shift + j/k -> swap position focused window
+super + 1-9 -> focus tag
 
-super + m -> change layout
+super + shift + 1-9 -> move focused window to tag
+
+super + period/comma -> focus next/previous screen
+
+super + m -> next layout
+
+super + shift + m -> previous layout
+
+super + up/down -> increase/decrease windows in the main area
+
+super + left/right -> shrink/expand the main area
 
 super + q -> kill focused window
 
 super + s -> scratchpad toggle
 
-super + x -> session menu
+super + x -> session menu (suspend/logout/reboot/shutdown)
+
+super + shift + s -> log current window-manager state (debug)
 
 super + shift + q -> quit WM
 
 super + shift + r -> restart pwm in place (re-reads config.toml, keeps your windows)
+
+XF86AudioRaiseVolume / XF86AudioLowerVolume / XF86AudioMute -> volume up/down/mute (PulseAudio)
+
+Holding `super + shift` also enables mouse control of floating windows: drag
+with the left button to move, the right button to resize, or middle-click to
+sink a floating window back into the tiled layout.
 
 # Credits
 
