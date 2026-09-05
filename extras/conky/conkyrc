@@ -62,11 +62,13 @@ $color${hr}
 ${font}
 ${color grey}super + return -> ${color}terminal
 ${color grey}super + d -> ${color}dmenu
-${color grey}super + j/k -> ${color}swap focused window 
+${color grey}super + t -> ${color}lock screen
+${color grey}super + j/k -> ${color}focus window
 ${color grey}super + shift + j/k -> ${color}swap window position
 ${color grey}super + m -> ${color}change layout
 ${color grey}super + p -> ${color}print screen
 ${color grey}super + q -> ${color}kill focused window
 ${color grey}super + s -> ${color}scratchpad
 ${color grey}super + x -> ${color}powermenu
+${color grey}super + shift + r -> ${color}restart pwm
 ]]

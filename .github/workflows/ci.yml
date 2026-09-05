@@ -47,9 +47,9 @@ jobs:
       # No --all-targets here: pwm is a --bin-only crate with zero #[test]s,
       # and clippy --all-targets pulls in the `test` build unit anyway - in
       # that unit rustc's synthesized test-runner main() never calls the
-      # real main(), so anything only reachable from it (e.g. GREY in
-      # config.rs) reads as dead code and clippy errors on a false positive.
-      # Plain `cargo clippy` (bin target only) doesn't hit this.
+      # real main(), so anything only reachable from it (e.g. PwmConfig's
+      # fields in config.rs) reads as dead code and clippy errors on a false
+      # positive. Plain `cargo clippy` (bin target only) doesn't hit this.
       - name: cargo clippy
         run: cargo clippy -- -D warnings
 

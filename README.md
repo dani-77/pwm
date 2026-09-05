@@ -23,9 +23,13 @@ The WM you all know from where it came.
 
 ## Running Dependencies
 
+- alsa-utils (`amixer`, for the bar's volume level widget)
+
 - dbus
 
 - dmenu
+
+- pulseaudio-utils (`pactl`, for the volume keybindings)
 
 - st
 
@@ -43,6 +47,8 @@ The WM you all know from where it came.
   Nerd Font family available on your system.
 
 ### Optional dependencies
+
+- conky (see [`extras/conky`](extras/conky))
 
 - dunst
 
@@ -88,9 +94,13 @@ pwm reads `~/.config/pwm/config.toml` (or `$XDG_CONFIG_HOME/pwm/config.toml`)
 once at startup. It's entirely optional - anything you leave out, or the
 whole file if you never create one, keeps pwm's built-in defaults, and a
 mistake in it falls back safely with a warning rather than stopping pwm from
-starting. It isn't watched for changes, but `super + shift + r` restarts pwm
-in place to pick up edits - see [Keybinds](#keybinds) below - without a full
-logout/login.
+starting. It isn't watched for changes, but `super + shift + r` - see
+[Keybinds](#keybinds) below - gives you a "fake" hot reload: pwm re-execs
+itself in place and re-reads `config.toml` from scratch (theme, keybindings,
+window/float rules, bar widgets included), all without a full logout/login.
+It's not a true in-process reload, so the bar and window borders do flash
+briefly while the fresh process starts back up, but your open windows
+survive the restart untouched.
 
 A fully-commented example, listing every available option, is installed to
 `/usr/share/pwm/config.toml.example` - copy it to get started:
@@ -137,23 +147,47 @@ super + return -> st (suckless terminal)
 
 super + d -> dmenu (suckless menu)
 
+super + t -> lock screen (slock)
+
+super + j/k -> move focus down/up
+
+super + shift + j/k -> swap focused window down/up
+
 super + shift + f -> full screen toggle
 
-super + j/k -> swap focused window
+super + tab -> toggle back to the previously focused tag
 
-super + shift + j/k -> swap position focused window
+super + 1-9 -> focus tag
 
-super + m -> change layout
+super + shift + 1-9 -> move focused window to tag
+
+super + period/comma -> focus next/previous screen
+
+super + m -> next layout
+
+super + shift + m -> previous layout
+
+super + up/down -> increase/decrease windows in the main area
+
+super + left/right -> shrink/expand the main area
 
 super + q -> kill focused window
 
 super + s -> scratchpad toggle
 
-super + x -> session menu
+super + x -> session menu (suspend/logout/reboot/shutdown)
+
+super + shift + s -> log current window-manager state (debug)
 
 super + shift + q -> quit WM
 
 super + shift + r -> restart pwm in place (re-reads config.toml, keeps your windows)
+
+XF86AudioRaiseVolume / XF86AudioLowerVolume / XF86AudioMute -> volume up/down/mute (PulseAudio)
+
+Holding `super + shift` also enables mouse control of floating windows: drag
+with the left button to move, the right button to resize, or middle-click to
+sink a floating window back into the tiled layout.
 
 # Credits
 

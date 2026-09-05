@@ -6,5 +6,7 @@ super + p
 	scrot
 super + r
 	gmrun
-super + t
-	slock
+
+# Note: don't bind "super + t" here - pwm already binds it to lock the
+# screen by default (see the Keybinds section in the main README), and the
+# window manager grabs it first, so an sxhkd rule for it would never fire.
