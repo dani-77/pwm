@@ -94,9 +94,13 @@ pwm reads `~/.config/pwm/config.toml` (or `$XDG_CONFIG_HOME/pwm/config.toml`)
 once at startup. It's entirely optional - anything you leave out, or the
 whole file if you never create one, keeps pwm's built-in defaults, and a
 mistake in it falls back safely with a warning rather than stopping pwm from
-starting. It isn't watched for changes, but `super + shift + r` restarts pwm
-in place to pick up edits - see [Keybinds](#keybinds) below - without a full
-logout/login.
+starting. It isn't watched for changes, but `super + shift + r` - see
+[Keybinds](#keybinds) below - gives you a "fake" hot reload: pwm re-execs
+itself in place and re-reads `config.toml` from scratch (theme, keybindings,
+window/float rules, bar widgets included), all without a full logout/login.
+It's not a true in-process reload, so the bar and window borders do flash
+briefly while the fresh process starts back up, but your open windows
+survive the restart untouched.
 
 A fully-commented example, listing every available option, is installed to
 `/usr/share/pwm/config.toml.example` - copy it to get started:
