@@ -281,7 +281,12 @@ pub fn logout_menu(theme: &Theme) -> KeyHandler {
                     let _ = spawn_cmd("loginctl suspend");
                 }
                 "󰍃  logout" => {
-                    let _ = spawn_cmd("kill -9 -1");
+                    // Clean WM shutdown: penrose stops wm.run(), main returns,
+                    // the X session ends -- same as the M-S-q exit binding.
+                    // `kill -9 -1` used to SIGKILL every user process (tmux/ssh
+                    // included) with no cleanup.
+                    let mut do_exit = exit::<RustConn>();
+                    return do_exit.call(state, _x);
                 }
                 "󰤆  shutdown" => {
                     let _ = spawn_cmd("loginctl poweroff");
