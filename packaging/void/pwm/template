@@ -1,0 +1,32 @@
+# Template file for 'pwm'
+pkgname=pwm
+version=0.6.4
+revision=1
+archs="x86_64 x86_64-musl"
+build_style=cargo
+hostmakedepends="pkg-config"
+makedepends="libXft-devel libX11-devel"
+depends="dmenu libX11 libXft st wireless_tools"
+short_desc="PipaWindowManager, a Penrose Lib Tiling Window Manager"
+maintainer="Daniel Azevedo <daniazevedo77@posteo.net>"
+license="MIT"
+homepage="https://github.com/dani-77/pwm"
+changelog="https://github.com/dani-77/${pkgname}/archive/refs/tags/${version}"
+distfiles="https://github.com/dani-77/${pkgname}/archive/refs/tags/${version}.tar.gz"
+checksum=33756bdb09fd9f072d78dbcf6320191d3305f33722ce133a53ce3555deab7f15
+repository=d77
+
+do_build() {
+	cargo build --release
+}
+
+do_install() {
+	sed -i '3i conky -c ~/.conkyrc1 &' etc/xdg/pwm/startup.sh
+	vbin target/release/pwm
+	vinstall pwm.desktop 644 usr/share/xsessions/
+	vmkdir /etc/xdg/pwm
+	vcopy etc/xdg/pwm/'*' /etc/xdg/pwm/
+	vmkdir /usr/share/pwm
+	vcopy usr/share/pwm/'*' /usr/share/pwm/
+	vlicense LICENSE
+}
