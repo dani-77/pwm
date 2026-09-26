@@ -88,6 +88,16 @@ To install widely:
 $ sudo make install
 ```
 
+Or as a package:
+
+- **Arch Linux**: in the AUR as [`pwm-d77`](https://aur.archlinux.org/packages/pwm-d77)
+  (`yay -S pwm-d77`; named `pwm-d77` because the `pwm` AUR name still holds an
+  unrelated project's history). The same `PKGBUILD` is in
+  [`packaging/arch`](packaging/arch/PKGBUILD).
+- **Void Linux**: an `xbps-src` template is in
+  [`packaging/void/pwm`](packaging/void/pwm/template) (a copy of the one in
+  [`d77void/srcpkgs-d77`](https://github.com/d77void/srcpkgs-d77)).
+
 ## Configuration
 
 pwm reads `~/.config/pwm/config.toml` (or `$XDG_CONFIG_HOME/pwm/config.toml`)
