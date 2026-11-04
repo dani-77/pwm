@@ -88,6 +88,10 @@ fn wake_event_loop() -> penrose::Result<()> {
     let conn = RustConn::new()?;
     conn.set_prop(conn.root(), WAKE_PROP, Prop::Cardinal(vec![1]))?;
     conn.flush();
+    // Wait for a reply before this connection is dropped: with only the
+    // flush, closing the connection right away could lose the change, and
+    // then the reload waited for whatever X event came next.
+    conn.get_prop(conn.root(), WAKE_PROP)?;
     Ok(())
 }
 
