@@ -232,7 +232,7 @@ dependencies = [
 
 [[package]]
 name = "pwm"
-version = "0.6.6"
+version = "0.6.7"
 dependencies = [
  "nix",
  "penrose",
@@ -241,6 +241,7 @@ dependencies = [
  "toml",
  "tracing",
  "tracing-subscriber",
+ "x11rb",
 ]
 
 [[package]]

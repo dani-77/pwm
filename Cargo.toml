@@ -1,6 +1,6 @@
 [package]
 name = "pwm"
-version = "0.6.6"
+version = "0.6.7"
 description = "Pipa Window Manager, a light Penrose Libraries WM."
 authors = ["Daniel Azevedo", "dani-77 <daniazevedo77@posteo.net>"]
 license = "MIT"
@@ -18,3 +18,5 @@ serde = { version = "1.0.229", features = ["derive"] }
 toml = "1.1.4"
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
+# Already pulled in by penrose; used directly by xwatch.rs.
+x11rb = "0.13"

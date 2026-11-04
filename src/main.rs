@@ -4,6 +4,7 @@ mod keybindings;
 mod layouts;
 mod reload;
 mod user_config;
+mod xwatch;
 
 use nix::sys::signal::{SigHandler, Signal, signal};
 use penrose::x11rb::RustConn;
@@ -128,6 +129,7 @@ fn main() -> Result<()> {
 
     // Run!
     reload::install();
+    xwatch::install();
     wm.run()?;
 
     // "M-S-r" (action `restart`) stops the loop above like a normal exit,
