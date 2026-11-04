@@ -112,6 +112,10 @@ It's not a true in-process reload, so the bar and window borders do flash
 briefly while the fresh process starts back up, but your open windows
 survive the restart untouched.
 
+The same restart can be triggered from outside with `SIGHUP`
+(`pkill -HUP -x pwm`), so scripts and settings tools that edit
+`config.toml` can apply their changes without a keypress.
+
 A fully-commented example, listing every available option, is installed to
 `/usr/share/pwm/config.toml.example` - copy it to get started:
 

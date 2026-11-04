@@ -2,6 +2,7 @@ mod bar;
 mod config;
 mod keybindings;
 mod layouts;
+mod reload;
 mod user_config;
 
 use nix::sys::signal::{SigHandler, Signal, signal};
@@ -67,7 +68,7 @@ fn main() -> Result<()> {
     };
 
     // Penrose configuration
-    let config = add_ewmh_hooks(Config {
+    let mut config = add_ewmh_hooks(Config {
         focused_border: pwm_config.focused_border,
         normal_border: pwm_config.normal_border,
         default_layouts: layouts(),
@@ -83,6 +84,9 @@ fn main() -> Result<()> {
         ))),
         ..Config::default()
     });
+
+    // SIGHUP re-reads config.toml (see reload.rs)
+    config.compose_or_set_event_hook(reload::event_hook);
 
     // Scratchpad
     let (nsp, toggle_nsp) = NamedScratchPad::new(
@@ -123,6 +127,7 @@ fn main() -> Result<()> {
     let wm = add_named_scratchpads(wm, vec![nsp]);
 
     // Run!
+    reload::install();
     wm.run()?;
 
     // "M-S-r" (action `restart`) stops the loop above like a normal exit,

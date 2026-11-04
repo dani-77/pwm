@@ -10,7 +10,9 @@
 # "restart" action (bound to M-S-r by default) re-execs pwm in place, which
 # re-reads it without a full logout/login: existing windows survive, though
 # the bar and borders do flash briefly while the fresh process starts back
-# up. See "restart" under Keybindings below.
+# up. See "restart" under Keybindings below. Sending pwm a SIGHUP
+# (`pkill -HUP -x pwm`) does the same restart, so tools that edit this file
+# can apply their changes without a keypress.
 
 # ── Theme ────────────────────────────────────────────────────────────────
 # Built-in themes: d77 (default), gruvbox_dark, arc_dark, dracula,
