@@ -20,3 +20,8 @@ tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
 # Already pulled in by penrose; used directly by xwatch.rs.
 x11rb = "0.13"
+
+# Local copy of penrose_ui 0.4.0 with a fix for a startup race that killed pwm;
+# see vendor/penrose_ui/PWM_CHANGES.md. Drop it once upstream has the fix.
+[patch.crates-io]
+penrose_ui = { path = "vendor/penrose_ui" }
