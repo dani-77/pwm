@@ -4,6 +4,7 @@
 //! reload yet, so changes only take effect after logging out and back in.
 //! Anything missing, malformed, or simply absent falls back to sane
 //! built-in defaults rather than failing to start the window manager.
+use crate::keyboard::{Keyboard, RawKeyboard};
 use serde::Deserialize;
 use std::{collections::HashMap, env, fs, path::PathBuf};
 use tracing::warn;
@@ -133,6 +134,8 @@ pub struct UserConfig {
     /// `Some(specs)` is overlaid onto them key by key - see
     /// [`crate::keybindings::raw_key_bindings`].
     pub binds: Option<Vec<BindSpec>>,
+    /// `[keyboard]`: XKB layout and key repeat, see [`crate::keyboard`].
+    pub keyboard: Keyboard,
 }
 
 /// The themes pwm ships with. `d77` is the original hand-picked palette
@@ -212,6 +215,8 @@ struct RawConfig {
     bar: RawBar,
     #[serde(default, rename = "bind")]
     binds: Vec<RawBind>,
+    #[serde(default)]
+    keyboard: RawKeyboard,
 }
 
 #[derive(Debug, Deserialize)]
@@ -454,5 +459,6 @@ pub fn load() -> UserConfig {
         float_rules: resolve_float_rules(raw.float_rules),
         bar_widgets: raw.bar.widgets.unwrap_or_else(default_bar_widgets),
         binds: resolve_binds(raw.binds),
+        keyboard: raw.keyboard.resolve(),
     }
 }

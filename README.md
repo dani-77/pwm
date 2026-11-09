@@ -48,6 +48,8 @@ The WM you all know from where it came.
 
 ### Optional dependencies
 
+- setxkbmap and xset (only for the `[keyboard]` section of `config.toml`)
+
 - conky (see [`extras/conky`](extras/conky))
 
 - dunst
@@ -147,6 +149,10 @@ What you can configure:
 - **`[bar]`** - `widgets`, an ordered list picking which bar widgets show
   (from `workspaces`, `layout`, `window_name`, `cpu`, `ram`, `volume`,
   `wifi`, `battery`, `clock`).
+- **`[keyboard]`** - XKB `layout`, `variant`, `model` and `options`
+  (applied with `setxkbmap`) and key `repeat_delay`/`repeat_rate` (applied
+  with `xset r rate`). Only what you set is touched - without this section
+  the keyboard stays as the X server set it up.
 - **`[[bind]]`** - remap or add keybindings. Like window rules, entries are
   overlaid onto the built-in keymap key by key - a `[[bind]]` for a key that
   already does something replaces just that one binding, every other

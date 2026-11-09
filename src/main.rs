@@ -1,6 +1,7 @@
 mod bar;
 mod config;
 mod keybindings;
+mod keyboard;
 mod layouts;
 mod reload;
 mod user_config;
@@ -103,6 +104,10 @@ fn main() -> Result<()> {
 
     // Initialize X11 connection
     let conn = RustConn::new()?;
+
+    // [keyboard]: set the XKB layout and key repeat before the keybindings
+    // below are resolved (via xmodmap) against the keymap
+    user_config.keyboard.apply();
 
     // Parse keybindings
     let key_bindings = parse_keybindings_with_xmodmap(raw_key_bindings(

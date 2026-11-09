@@ -14,6 +14,8 @@ depends=('libx11' 'libxft' 'dmenu' 'st' 'wireless_tools' 'dbus' 'gcc-libs' 'glib
 makedepends=('cargo' 'pkgconf')
 optdepends=(
   'slock: default screen locker'
+  'xorg-setxkbmap: [keyboard] layout in config.toml'
+  'xorg-xset: [keyboard] key repeat in config.toml'
   'libpulse: volume keys (pactl)'
   'feh: wallpaper in startup.sh'
   'conky: system monitor in startup.sh'
