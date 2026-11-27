@@ -9,7 +9,6 @@ use penrose::{
     },
     builtin::layout::messages::{ExpandMain, IncMain, ShrinkMain},
     core::bindings::{KeyEventHandler, MouseEventHandler, MouseState, click_handler},
-    extensions::actions::toggle_fullscreen,
     extensions::hooks::ToggleNamedScratchPad,
     map,
     util::spawn as spawn_cmd,
@@ -19,6 +18,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use tracing::warn;
 
 use crate::config::WORKSPACES;
+use crate::fullscreen::toggle_fullscreen;
 use crate::user_config::{Apps, BindSpec, Theme};
 
 type KeyHandler = Box<dyn KeyEventHandler<RustConn>>;

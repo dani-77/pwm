@@ -1,5 +1,6 @@
 mod bar;
 mod config;
+mod fullscreen;
 mod keybindings;
 mod keyboard;
 mod layouts;
@@ -87,6 +88,8 @@ fn main() -> Result<()> {
         ..Config::default()
     });
 
+    // Client fullscreen requests, ahead of penrose's ewmh hook (see fullscreen.rs)
+    config.compose_or_set_event_hook(fullscreen::event_hook);
     // SIGHUP re-reads config.toml (see reload.rs)
     config.compose_or_set_event_hook(reload::event_hook);
 
@@ -160,7 +163,15 @@ fn main() -> Result<()> {
             warn!(%e, "failed to reset SIGCHLD disposition before restart");
         }
 
+        // When a package upgrade (or a manual install) replaces the binary
+        // while pwm runs, /proc/self/exe reads "<path> (deleted)" and exec
+        // would fail, ending the session: run the file now at that path.
         let exe = std::env::current_exe()?;
+        let exe = exe
+            .to_str()
+            .and_then(|path| path.strip_suffix(" (deleted)"))
+            .map(std::path::PathBuf::from)
+            .unwrap_or(exe);
         let err = std::process::Command::new(exe).exec();
         // `exec` only returns if it failed to replace the process image.
         panic!("failed to re-exec pwm for restart: {err}");
