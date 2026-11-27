@@ -27,5 +27,7 @@ udiskie -a &
 # then drops the new one and keeps showing a frozen bar.
 xcompmgr -c -n &
 xautolock -time 5 -locker slock &
-redshift -l 41.16:-8.62 &
+# startup.sh runs again on every restart (M-S-r): start redshift only once,
+# and -P resets the gamma ramps so its adjustment never stacks.
+pgrep -x redshift >/dev/null || redshift -P -l 41.16:-8.62 &
 sxhkd -c ~/.config/sxhkd/sxhkdrc
