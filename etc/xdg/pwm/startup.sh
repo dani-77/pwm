@@ -22,7 +22,10 @@ fi
 synclient TapButton1=1 &
 dunst &
 udiskie -a &
-xcompmgr -c -f -n &
+# No -f (fading): restarting pwm (M-S-r) recreates the status bar with the
+# window ID the old one had, and xcompmgr, still fading the old window out,
+# then drops the new one and keeps showing a frozen bar.
+xcompmgr -c -n &
 xautolock -time 5 -locker slock &
 redshift -l 41.16:-8.62 &
 sxhkd -c ~/.config/sxhkd/sxhkdrc
