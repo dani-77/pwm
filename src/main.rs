@@ -29,7 +29,18 @@ use config::PwmConfig;
 use keybindings::{RESTART_REQUESTED, mouse_bindings, raw_key_bindings};
 use layouts::layouts;
 
+/// Set on the process the restart below re-execs: the session's startup
+/// script already ran, so the new process skips it.
+const RESTARTED_ENV: &str = "PWM_RESTARTED";
+
 fn main() -> Result<()> {
+    let restarted = std::env::var_os(RESTARTED_ENV).is_some();
+    if restarted {
+        // Programs started from here on must not inherit it.
+        // SAFETY: first thing in main, before any other thread exists.
+        unsafe { std::env::remove_var(RESTARTED_ENV) };
+    }
+
     // Initialize logging
     tracing_subscriber::fmt()
         .with_env_filter("info")
@@ -80,11 +91,10 @@ fn main() -> Result<()> {
         // shell, just a whitespace split - so the active theme name is
         // passed as a plain argument (`$1` in a shell script), not an env
         // var. A startup_script that ignores its args (the common case)
-        // keeps working exactly as before.
-        startup_hook: Some(SpawnOnStartup::boxed(format!(
-            "{} {}",
-            apps.startup_script, theme.name
-        ))),
+        // keeps working exactly as before. A restart (M-S-r, SIGHUP) skips
+        // it: everything it started is still running.
+        startup_hook: (!restarted)
+            .then(|| SpawnOnStartup::boxed(format!("{} {}", apps.startup_script, theme.name))),
         ..Config::default()
     });
 
@@ -172,7 +182,9 @@ fn main() -> Result<()> {
             .and_then(|path| path.strip_suffix(" (deleted)"))
             .map(std::path::PathBuf::from)
             .unwrap_or(exe);
-        let err = std::process::Command::new(exe).exec();
+        let err = std::process::Command::new(exe)
+            .env(RESTARTED_ENV, "1")
+            .exec();
         // `exec` only returns if it failed to replace the process image.
         panic!("failed to re-exec pwm for restart: {err}");
     }
